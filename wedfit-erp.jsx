@@ -1,9 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import {
   House, CalendarDays, Shirt, UsersRound, Menu, Plus, Search, WifiOff, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   ArrowUpRight, ArrowDownLeft, Droplet, Check, TriangleAlert, Phone, Clock, X, Lock, Minus, Info, RotateCw,
-  ShieldCheck, Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors,
-} from 'lucide';
+  ShieldCheck, Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors, Sun, Moon,
+} from 'lucide-react';
+
+/* New deps for this pass — install before running:
+     npm i framer-motion canvas-confetti
+   Everything else (React, lucide-react) was already a dependency. */
 
 /* ═════════════════════════════════════════════════════════════════════════
    WedHub · Home (“Today”)
@@ -32,12 +38,12 @@ const CSS = `/* ── Tokens ────────────────�
   --serif:'Playfair Display','Iowan Old Style','Palatino Linotype',Georgia,serif;
   --sans:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   /* type scale — six sizes, nothing else. fs-body now covers what fs-label used to (base text, sub-lines, inputs). */
-  --fs-display:42px; --fs-h2:22px; --fs-title:20px; --fs-body:15px; --fs-time:20px; --fs-meta:13px;
+  --fs-display:42px; --fs-h2:22px; --fs-title:20px; --fs-body:15.5px; --fs-time:20px; --fs-meta:13px;
   --r-lg:16px; --r-md:12px; --r-sm:8px;
   --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
   --rail:72px;
   --gutter:clamp(24px, 5vw, 72px);
-  font:400 var(--fs-body)/1.4 var(--sans); letter-spacing:.005em; color:var(--ink); background:var(--paper);
+  font:400 var(--fs-body)/1.5 var(--sans); letter-spacing:.005em; color:var(--ink); background:var(--paper);
   min-height:100vh; -webkit-font-smoothing:antialiased;
 }
 .wh *,.wh *::before,.wh *::after{box-sizing:border-box}
@@ -224,7 +230,7 @@ const CSS = `/* ── Tokens ────────────────�
 @keyframes sh{to{background-position:-200% 0}}
 
 /* ── Sheets & toast ─────────────────────────────────────────────────── */
-.scrim{position:fixed;inset:0;z-index:50;background:rgba(31,27,23,.48);display:flex}
+.scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex}
 .sheet{background:var(--surface);display:flex;flex-direction:column;max-height:92vh;box-shadow:0 30px 80px rgba(0,0,0,.3)}
 .sheet.center{margin:auto;width:520px;border-radius:var(--r-lg)}
 .sheet.bottom{margin-top:auto;width:100%;border-radius:20px 20px 0 0}
@@ -295,7 +301,7 @@ const CSS = `/* ── Tokens ────────────────�
 .segm{display:grid;grid-template-columns:1fr 1fr;background:var(--sand);border-radius:var(--r-md);padding:3px;margin-bottom:var(--s5)}
 .segm button{height:44px;border-radius:9px;font-weight:700;display:flex;gap:var(--s2);align-items:center;justify-content:center;color:var(--ink-2)}
 .segm button[aria-selected=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
-.cnt{background:var(--ink);color:#fff;border-radius:99px;font-size:12px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
+.cnt{background:var(--onyx);color:var(--onyx-ink);border-radius:99px;font-size:12px;min-width:20px;height:20px;display:grid;place-items:center;padding:0 6px}
 .mobile .time{padding-right:16px;padding-top:14px}
 .mobile .time::after{top:16px}
 .mobile .time small{font-size:10px}
@@ -357,22 +363,498 @@ const CSS = `/* ── Tokens ────────────────�
 .m-tools{gap:0}
 .m-tools .iconbtn{width:40px}
 .m-tools .pill{margin-right:var(--s1);padding:0 10px}
+
+
+/* ═════════════════════════════════════════════════════════════════════════
+   v6 · Product design pass
+   Visual system: neutral operations console, restrained semantic color,
+   explicit hierarchy, individual work cards, exception-first rail, and
+   mobile-first touch targets. No new dependencies.
+   ═════════════════════════════════════════════════════════════════════════ */
+.wh{
+  --paper:#F6F8FB;
+  --surface:#FFFFFF;
+  --sand:#F2F4F7;
+  --line:#E4E7EC;
+  --line-2:#98A2B3;
+  --ink:#101828;
+  --ink-2:#475467;
+  --ink-3:#667085;
+  --pickup:#2563EB;
+  --return:#B45309;
+  --wash:#0F766E;
+  --red:#B42318;
+  --red-d:#912018;
+  --amber:#B54708;
+  --gold:#2563EB;
+  --brand:#2563EB;
+  --brand-strong:#1D4ED8;
+  --brand-soft:#EEF4FF;
+  --green:#027A48;
+  --green-soft:#ECFDF3;
+  --red-soft:#FEF3F2;
+  --amber-soft:#FFFAEB;
+  --teal-soft:#ECFDFB;
+  /* a constant dark chip color that reads on both themes — logo mark, toast, stage badges */
+  --onyx:#0F172A;
+  --onyx-ink:#fff;
+  --scrim:rgba(16,24,40,.46);
+  --skel-a:#F2F4F7; --skel-b:#F9FAFB;
+  --return-soft:#FFF7ED; --return-border:#FDBA74;
+  --red-border:#FDA29B; --red-border-soft:#FECACA;
+  --amber-border:#FEDF89; --amber-line:#F79009;
+  --teal-border:#99D8D2;
+  --brand-border:#B9D0FF; --brand-line:#8EB5FF;
+  --color-scheme:light;
+  color-scheme:var(--color-scheme);
+  --serif:'Playfair Display','Iowan Old Style','Palatino Linotype',Georgia,serif;
+  --sans:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r-xl:18px;
+  --r-lg:14px;
+  --r-md:10px;
+  --r-sm:8px;
+  --shadow-1:0 1px 2px rgba(16,24,40,.04),0 2px 6px rgba(16,24,40,.04);
+  --shadow-2:0 8px 24px rgba(16,24,40,.08),0 2px 8px rgba(16,24,40,.04);
+  --shadow-3:0 18px 48px rgba(16,24,40,.16),0 4px 16px rgba(16,24,40,.06);
+  --gutter:clamp(20px,3vw,44px);
+  color:var(--ink);
+  background:var(--paper);
+  letter-spacing:0;
+}
+.wh :focus-visible{outline:3px solid rgba(37,99,235,.24);outline-offset:2px}
+.wh button:disabled{opacity:.52}
+.overline{font-size:11px;line-height:1;font-weight:800;letter-spacing:.11em;color:var(--ink-3)}
+
+/* Header */
+.top{
+  height:64px;
+  gap:22px;
+  padding:0 var(--gutter);
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 1px 3px rgba(16,24,40,.03);
+  backdrop-filter:blur(12px);
+}
+.brand{min-width:176px;gap:11px;font-size:17px;letter-spacing:-.01em}
+.mark{width:34px;height:34px;border-radius:10px;background:var(--onyx);color:var(--onyx-ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);font:800 16px/1 var(--sans)}
+.brand-lockup{display:grid;gap:2px;min-width:0}
+.brand-name{font-size:15px;font-weight:800;line-height:1.1;color:var(--ink)}
+.brand-context{font-size:10px;line-height:1;color:var(--ink-3);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.nav{gap:4px;align-self:center}
+.nav button{height:40px;padding:0 12px;border-radius:9px;display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--ink-2);position:relative}
+.nav button:hover{background:var(--sand);color:var(--ink)}
+.nav button.on{background:var(--brand-soft);color:var(--brand-strong)}
+.nav button.on::after{display:none}
+.iconbtn{width:40px;height:40px;border-radius:9px;color:var(--ink-2)}
+.iconbtn:hover{background:var(--sand);color:var(--ink)}
+.btn-new{height:40px;padding:0 13px;border:1px solid var(--brand-strong);border-radius:9px;background:var(--brand);box-shadow:0 1px 2px rgba(37,99,235,.2);font-size:13px}
+.btn-new:hover{background:var(--brand-strong)}
+.btn-new kbd{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.18);margin-left:3px}
+.btn-new.locked{background:var(--surface);border-color:var(--line-2);color:var(--ink-2);box-shadow:none}
+.avatar{width:34px;height:34px;border:1px solid var(--line);background:var(--sand);font-size:12px;color:var(--ink)}
+.pill{height:32px;border:1px solid transparent;font-size:12px}
+.pill.alert{background:var(--red-soft);border-color:#FDA29B;color:var(--red)}
+.pill.alert:hover{background:#FEE4E2}
+.pill.offline{border:1px solid #98A2B3;background:var(--amber-soft);color:var(--amber)}
+.banner{background:var(--amber-soft);border-bottom:1px solid #FEDF89;color:#7A2E0A;padding:10px var(--gutter);font-size:13px}
+
+/* Overdue = exception module, not a red wall */
+.od{background:transparent;border:0;color:var(--ink);scroll-margin-top:76px}
+.od-in{max-width:1480px;margin:0 auto;padding:16px var(--gutter)}
+.od-head{min-height:44px;padding:0 14px;gap:10px;margin:0;border:1px solid var(--red-border);border-bottom:0;border-radius:12px 12px 0 0;background:var(--red-soft);color:var(--red);font-size:14px}
+.od-collapse{width:32px;height:32px;color:var(--red);border-radius:8px}
+.od-collapse:hover{background:#FEE4E2}
+.od-row{grid-template-columns:108px minmax(0,1fr) auto;gap:18px;padding:14px;border-top:1px solid var(--red-border-soft);background:var(--surface)}
+.od-row:last-of-type{border-bottom:1px solid var(--red-border-soft)}
+.od-late{font-size:13px;color:var(--red);background:var(--red-soft);border-radius:8px;padding:8px 10px;align-self:start;white-space:nowrap}
+.od-who b{font-size:14px;color:var(--ink)}
+.od-who span{opacity:1;color:var(--ink-3)}
+.od-meta{font-size:13px;color:var(--ink-2);margin-top:4px}
+.od-block{font-size:12px;color:var(--amber);margin-top:8px}
+.od-btns{gap:8px}
+.od-btn{height:38px;padding:0 12px;border:1px solid var(--line-2);border-radius:8px;background:var(--surface);color:var(--ink-2);font-size:12px}
+.od-btn:hover{background:var(--sand);color:var(--ink)}
+.od-btn.solid{background:var(--red);border-color:var(--red);color:#fff}
+.od-btn.solid:hover{background:var(--red-d)}
+.od-more{padding:11px 14px;border:1px solid var(--red-border-soft);border-top:0;border-radius:0 0 12px 12px;background:var(--surface);color:var(--red);font-size:12px}
+.od-mini-row{max-width:1480px;margin:16px auto;padding:0 var(--gutter);min-height:48px;color:var(--red);background:var(--red-soft);border:1px solid var(--red-border);border-radius:10px}
+.od-clear{max-width:1480px;margin:0 auto;padding:14px var(--gutter);color:var(--green);font-size:13px}
+
+/* Workspace header */
+.page{max-width:1480px;padding:30px var(--gutter) 96px;grid-template-columns:minmax(0,1fr) 348px;gap:28px}
+.dayhead{display:block;padding-bottom:22px;margin-bottom:24px;border-bottom:1px solid var(--line)}
+.dayhead-top{display:flex;align-items:flex-end;justify-content:space-between;gap:24px}
+.daycopy{min-width:0}
+.day-title-row{display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.dayhead h1{font:700 42px/1.1 var(--serif);letter-spacing:-.015em;margin:0;padding:0;border:0;color:var(--ink)}
+.day-status{display:inline-flex;align-items:center;height:27px;padding:0 10px;border-radius:99px;background:var(--green-soft);color:var(--green);font-size:11.5px;font-weight:800}
+.day-sub{margin-top:9px;color:var(--ink-2);font-size:13.5px}
+.daynav{gap:4px}
+.daynav .iconbtn{background:var(--surface);border:1px solid var(--line)}
+.daynav .iconbtn:hover{background:var(--sand)}
+.textbtn{height:40px;padding:0 10px;color:var(--brand);font-size:13px;text-decoration:none;border-radius:8px}
+.textbtn:hover{background:var(--brand-soft);text-decoration:none}
+.daystats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+.stat{min-height:72px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow-1)}
+.stat-label{font-size:11.5px;color:var(--ink-3);font-weight:700}
+.stat-value{margin-top:5px;font-size:23px;line-height:1.1;font-weight:800;letter-spacing:-.025em;font-variant-numeric:tabular-nums}
+.stat-note{margin-top:4px;font-size:11.5px;color:var(--ink-3)}
+
+/* Timeline / appointment cards */
+.tl{position:relative}
+.tl::before{left:72px;border-left:1px solid var(--line)}
+.slot{grid-template-columns:72px minmax(0,1fr);margin-bottom:14px}
+.time{padding:13px 18px 0 0;font:700 15px/1 var(--serif);color:var(--ink-2)}
+.time small{margin-top:6px;font:700 10.5px/1 var(--sans);color:var(--ink-3);letter-spacing:.04em}
+.time::after{right:-5px;top:14px;width:10px;height:10px;background:var(--paper);border:2px solid #98A2B3}
+.group{margin-left:16px;background:transparent;border-radius:0;overflow:visible}
+.group.focus{background:transparent;color:var(--ink);border:0}
+.group .tab{height:34px;padding:0 10px;background:transparent;color:var(--ink-3);font-size:11px;border:0;text-transform:uppercase;letter-spacing:.07em}
+.group.focus .tab{background:var(--brand-soft);border:1px solid var(--brand-border);border-bottom:0;border-radius:10px 10px 0 0;color:var(--brand-strong);padding-left:12px}
+.rows{display:grid;gap:8px}
+.rows>li+li{border:0}
+.group.focus .rows>li+li{border:0}
+.group.focus .bid,.group.focus .row-sub,.group.focus .party,.group.focus .hint,.group.focus .money{color:var(--ink-2)}
+.group.focus .flag.late{color:var(--amber)}
+.group.focus .flag.wash{color:var(--wash)}
+.group.focus .chips li{border-color:var(--line);color:var(--ink)}
+.group.focus .chips li.short{border-color:#7FD8D0;color:var(--wash)}
+.group.focus .link,.group.focus .iconlink{color:var(--ink-2);border-color:var(--line)}
+.group.focus .iconlink:hover{background:var(--sand)}
+.group.focus .link{text-decoration-color:var(--line-2)}
+.group.focus .chev{color:var(--ink-3)}
+.row{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow-1);overflow:hidden;transition:border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.row:hover{border-color:#CDD5DF;box-shadow:var(--shadow-2)}
+.row.focused{border-color:var(--brand-line);box-shadow:0 0 0 1px rgba(37,99,235,.10),var(--shadow-2)}
+.row.return{--c:var(--return)}
+.row.wash{--c:var(--wash)}
+.row-line{grid-template-columns:minmax(0,1fr) auto;gap:16px;padding:13px 14px}
+.row-hit{gap:12px;padding:0;border-radius:9px}
+.row-hit:hover{background:transparent}
+.glyph{width:38px;height:38px;border-radius:10px;box-shadow:none}
+.glyph.return{background:var(--return-soft);color:var(--return);box-shadow:inset 0 0 0 1.5px var(--return-border)}
+.glyph.wash{background:var(--teal-soft);color:var(--wash);border-radius:10px}
+.row-text{gap:3px}
+.row-name{gap:7px}
+.row-name b{font-size:16px;line-height:1.3;letter-spacing:-.012em}
+.bid{font-size:11px;color:var(--ink-3)}
+.row-sub{font-size:12px;color:var(--ink-2)}
+.kind{display:inline-flex;align-items:center;margin-right:5px;font-size:11px;font-weight:800;letter-spacing:.01em;color:var(--c)}
+.flag{font-size:11px}
+.flag.late{color:var(--amber)}
+.flag.wash{color:var(--wash)}
+.chip-alt{height:22px;padding:0 7px;background:var(--amber-soft);border:1px solid var(--amber-border);color:var(--amber);font-size:10px}
+.chev{color:var(--ink-3)}
+.row-action{display:flex;align-items:center}
+.act{height:38px;min-width:116px;padding:0 12px;border:1px solid var(--c);border-radius:8px;font-size:12px;box-shadow:none}
+.act:hover{filter:none}
+.act.solid{background:var(--c);border-color:var(--c);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.act.solid:hover{filter:brightness(.97)}
+.act.dark{--c:#344054}
+.act.locked{border-style:dashed;background:var(--surface);color:var(--ink-2)}
+.act:active{transform:translateY(1px)}
+.row-more{padding:0 14px 14px 64px;border-top:1px solid var(--line)}
+.row-more-inner{padding-top:13px;display:grid;gap:12px}
+.party{font-size:12px;color:var(--ink-2);margin:0}
+.detail-label{font-size:10px;line-height:1;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:var(--ink-3);margin-bottom:6px}
+.chips{gap:6px}
+.chips li{background:var(--sand);border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:11px}
+.chips li.short{border:1px dashed #66BEB6;background:var(--teal-soft);color:var(--wash)}
+.money{margin:0;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#FBFCFE;font-size:12px;font-weight:700}
+.more-actions{gap:6px;margin:0;align-items:center}
+.link{min-height:34px;padding:0 8px;border-radius:7px;font-size:11px;text-decoration:none;color:var(--ink-2)}
+.link:hover{background:var(--sand);color:var(--ink)}
+.iconlink{width:34px;height:34px;border:1px solid var(--line);border-radius:7px;color:var(--ink-2)}
+.iconlink:hover{background:var(--sand)}
+.hint{margin:0;padding:10px 12px;border-radius:8px;background:var(--amber-soft);color:var(--amber);font-size:11px}
+.hint .link{padding:0;font-weight:800;color:var(--amber);background:none}
+.row-more>.act{margin-top:0}
+.marker{margin-top:0;border:1px dashed var(--teal-border);background:var(--teal-soft);border-radius:11px;padding:10px 12px;min-height:52px;box-shadow:none}
+.marker .glyph{width:30px;height:30px;border-radius:8px}
+.marker p{font-size:12px;color:var(--ink-2)}
+.marker p b{color:var(--ink)}
+.marker .link{color:var(--wash);font-weight:800}
+.now{grid-template-columns:72px minmax(0,1fr);margin:4px 0 14px}
+.now-t{justify-self:end;margin-right:6px;padding:5px 8px;border-radius:99px;background:var(--brand);color:#fff;font-size:10px;letter-spacing:.02em}
+.now i{height:1px;background:var(--brand-line)}
+.done{margin:0 0 18px 88px;padding:8px 0;border-bottom:1px solid var(--line)}
+.done-toggle{height:34px;color:var(--ink-2);font-size:11px;font-weight:800}
+.done-list{margin-top:6px}
+.done-list li{grid-template-columns:62px minmax(0,1fr);padding:8px 0;border-top:1px solid var(--line);font-size:11px;color:var(--ink-2)}
+.done-list b{font-weight:700;color:var(--ink)}
+.done-list .by{font-size:10px;color:var(--ink-3)}
+
+/* Right rail */
+.side{gap:14px;align-content:start;position:sticky;top:82px}
+.rail-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow-1);padding:16px}
+.side h2{margin:0;display:flex;align-items:center;gap:9px;font:800 15.5px/1.25 var(--sans);letter-spacing:-.01em;color:var(--ink)}
+.rail-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--teal-soft);color:var(--wash)}
+.rail-count{margin-left:auto;min-width:24px;height:24px;padding:0 7px;display:grid;place-items:center;border-radius:99px;background:var(--sand);color:var(--ink-2);font-size:10px}
+.rule{margin:10px 0 0;padding:9px 10px;border-radius:8px;background:var(--sand);font-size:11px;color:var(--ink-2)}
+.pipe{margin-top:16px}
+.stage{grid-template-columns:28px minmax(0,1fr);column-gap:10px;padding-bottom:20px}
+.stage::before{left:13px;top:30px;bottom:4px;border-left:1px dashed var(--line-2)}
+.stage-n{width:28px;height:28px;background:var(--onyx);color:var(--onyx-ink);font-size:10px;box-shadow:0 0 0 4px var(--surface);z-index:1}
+.stage:nth-child(1) .stage-n{background:var(--brand)}
+.stage:nth-child(2) .stage-n{background:var(--wash)}
+.stage:nth-child(3) .stage-n{background:var(--ink-3)}
+.stage h3{font-size:12px;line-height:28px;font-weight:800;color:var(--ink)}
+.stage .empty{margin-top:4px;font-size:11px;color:var(--ink-3)}
+.plain{margin-top:8px;gap:6px}
+.plain li{font-size:11px;line-height:1.35}
+.plain li b{font-weight:700;color:var(--ink)}
+.plain li span{font-size:10px;color:var(--ink-3)}
+.stage .act{width:100%;height:36px;margin-top:10px}
+.batch{margin-top:10px;padding:10px 0 0;border-top:1px solid var(--line)}
+.batch:first-of-type{padding-top:0}
+.batch.late{border-left:3px solid var(--amber-line);padding:10px 0 0 10px;border-top:0}
+.batch-h b{font-size:11px}
+.batch-h span{font-size:10px;color:var(--wash)}
+.batch.late .batch-h span{color:var(--amber)}
+.batch p{font-size:11px;color:var(--ink-2);margin-top:3px;line-height:1.4}
+.need{font-size:10px;margin-top:7px;color:var(--amber)}
+.rack li{gap:7px;padding:3px 0}
+.rack svg{color:var(--green)}
+.desk-card h2{margin-bottom:4px}
+.desk li{padding:10px 0;border-top:1px solid var(--line);grid-template-columns:1fr auto;gap:3px 10px}
+.desk li:first-child{margin-top:8px}
+.desk li b{font-size:11px;line-height:1.35}
+.desk li small{font-size:10px;color:var(--ink-3)}
+.desk .act{height:32px;min-width:74px;font-size:11px}
+.desk .empty{margin-top:8px;font-size:11px;color:var(--ink-3)}
+
+/* States */
+.state{padding:28px 0}
+.tl .state{margin-left:88px}
+.state h2{font-size:20px;line-height:1.3;letter-spacing:-.01em}
+.state p{font-size:13.5px;color:var(--ink-2);max-width:60ch;line-height:1.55}
+.state .btns{gap:8px;margin-top:16px}
+.state .code{font-size:10px;color:var(--ink-3)}
+.state.err{border:1px solid #FDA29B;border-left:3px solid var(--red);padding:18px;border-radius:11px;background:var(--red-soft)}
+.skel{gap:8px}
+.skel i{height:102px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(90deg,var(--skel-a),var(--skel-b),var(--skel-a));background-size:200% 100%}
+
+/* Sheets / dialogs */
+.scrim{background:rgba(16,24,40,.46);backdrop-filter:blur(2px)}
+.sheet{border:1px solid rgba(255,255,255,.28);box-shadow:var(--shadow-3);background:var(--surface)}
+.sheet.center{width:560px;border-radius:16px}
+.sheet.bottom{border-radius:18px 18px 0 0}
+.sheet-h{padding:20px 20px 10px}
+.sheet-h h2{font-size:19px;line-height:1.25;letter-spacing:-.008em}
+.sheet-h p{font-size:12.5px;color:var(--ink-2);margin-top:5px;line-height:1.5}
+.sheet-b{padding:8px 20px 16px}
+.sheet-f{padding:12px 20px 20px;border-top:1px solid var(--line);background:#FBFCFE}
+.sheet-f .act{height:44px}
+.pick{padding:12px 0;border-top:1px solid var(--line)}
+.pick b{font-size:12px}
+.pick small{font-size:10px;color:var(--ink-3)}
+.pick small.w{color:var(--amber)}
+.cond{font-size:10px;color:var(--ink-3)}
+.cond button{height:34px;border:1px solid var(--line);border-radius:7px;font-size:11px}
+.cond button[aria-pressed=true]{background:var(--onyx);color:var(--onyx-ink);border-color:var(--onyx)}
+.cond button.bad[aria-pressed=true]{background:var(--red);border-color:var(--red)}
+.step{border:1px solid var(--line);border-radius:8px}
+.step button{width:38px;height:38px}
+.step output{font-size:13px}
+.chk{padding:11px 0;border-top:1px solid var(--line)}
+.box{width:22px;height:22px;border-radius:6px;border:1px solid var(--line-2)}
+.inp{height:46px;border:1px solid var(--line-2);border-radius:8px;font-size:14px;box-shadow:inset 0 1px 2px rgba(16,24,40,.03)}
+.inp:focus{border-color:#84ADFF;outline:none;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.note{margin-top:12px;padding:10px;border-radius:8px;background:var(--sand);font-size:11px;color:var(--ink-2)}
+.note.warn{background:var(--amber-soft);color:var(--amber)}
+.tg{gap:7px;margin-top:4px}
+.tg button{height:48px;border:1px solid var(--line);border-radius:8px;font-size:11px}
+.tg button[aria-pressed=true]{background:var(--brand);border-color:var(--brand);color:#fff}
+.tg button[aria-pressed=true] small{color:#DDE9FF}
+.tg button.cur{border-style:dashed;border-color:var(--brand)}
+.res button{padding:11px 0;min-height:48px;border-top:1px solid var(--line)}
+.res span{font-size:12px}
+.x{width:36px;height:36px;border-radius:8px}
+.x:hover{background:var(--sand)}
+.sum{padding:12px 20px;border-top:1px solid var(--line);background:#FBFCFE}
+.rows-sum{gap:5px}
+.rows-sum .r{font-size:12px}
+.rows-sum .r.total{font-size:12px;border-top:1px solid var(--ink)}
+.rows-sum .r.total b{font-size:15px}
+.pay button{height:40px;min-width:72px;border:1px solid var(--line);border-radius:8px}
+.pay button[aria-checked=true]{background:var(--brand);border-color:var(--brand)}
+.depchk{font-size:11px}
+.toast{bottom:22px;border:1px solid rgba(255,255,255,.08);border-radius:10px;box-shadow:var(--shadow-3);font-size:12px;background:var(--onyx);color:var(--onyx-ink)}
+.toast>button{color:#C7D7FF;font-size:12px}
+.toast.offline{border:1px solid var(--amber-border);background:var(--amber-soft);color:var(--amber)}
+
+/* Mobile */
+.mobile{--rail:54px;--gutter:16px;--fs-display:26px;--fs-title:16px;--fs-body:14px}
+.mobile .m-top{min-height:72px;padding:11px 12px 11px 16px;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(16,24,40,.04)}
+.m-top-copy{display:grid;gap:6px;min-width:0}
+.m-brand{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+.m-brand b{color:var(--ink);letter-spacing:0;font-size:12px}
+.m-date{display:flex;align-items:center;gap:8px;min-width:0}
+.m-date h1{font:700 28px/1.05 var(--serif);letter-spacing:-.01em;white-space:nowrap}
+.m-tools{gap:2px}
+.mobile .iconbtn{width:40px;height:40px}
+.mobile .banner{padding:9px 16px;font-size:11px;line-height:1.35}
+.mobile .od{margin:0 12px}
+.mobile .od-in{padding:10px 0}
+.mobile .od-head{padding:0 11px;min-height:42px;font-size:12px}
+.mobile .od-row{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"late btns" "who btns";gap:3px 10px;padding:11px}
+.mobile .od-late{font-size:11px;padding:6px 8px}
+.mobile .od-who b{font-size:12px}
+.mobile .od-meta{font-size:11px}
+.mobile .od-btn.call{width:38px;height:38px;padding:0;border-radius:8px}
+.mobile .od-btn.solid{width:38px;height:38px;padding:0;border-radius:8px}
+.mobile .page{display:block;padding:14px 16px 116px}
+.mobile .segm{background:var(--sand);padding:3px;border-radius:9px;margin-bottom:16px;border:1px solid var(--line)}
+.mobile .segm button{height:40px;border-radius:7px;font-size:12px}
+.mobile .segm button[aria-selected=true]{background:var(--surface);box-shadow:0 1px 2px rgba(16,24,40,.06)}
+.mobile .tl::before{left:54px}
+.mobile .slot{grid-template-columns:54px minmax(0,1fr);margin-bottom:10px}
+.mobile .time{padding-right:12px;padding-top:13px;font-size:12px}
+.mobile .time::after{right:-5px;top:14px;width:10px;height:10px}
+.mobile .time small{font-size:10px}
+.mobile .group{margin-left:10px}
+.mobile .group .tab{height:30px;padding:0 8px;font-size:10px}
+.mobile .group.focus .tab{padding-left:9px}
+.mobile .rows{gap:7px}
+.mobile .row{border-radius:12px}
+.mobile .row-line{grid-template-columns:minmax(0,1fr);gap:0;padding:11px}
+.mobile .row-hit{gap:10px}
+.mobile .glyph{width:36px;height:36px}
+.mobile .row-name b{font-size:15px}
+.mobile .row-sub{font-size:11px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.mobile .flag{font-size:10px}
+.mobile .chip-alt{height:20px;font-size:10px}
+.mobile .row-more{padding:0 11px 12px 57px}
+.mobile .row-more-inner{padding-top:11px;gap:10px}
+.mobile .row-more .act{width:100%;height:44px;margin-top:0}
+.mobile .more-actions{gap:4px}
+.mobile .more-actions .link{min-height:32px}
+.mobile .done{margin:0 0 14px 64px}
+.mobile .done-toggle{height:32px;font-size:10px}
+.mobile .now{grid-template-columns:54px minmax(0,1fr);margin-bottom:10px}
+.mobile .now-t{font-size:10px;padding:4px 7px}
+.mobile .marker{padding:9px 10px;min-height:48px}
+.mobile .marker p{font-size:11px}
+.mobile .side{position:static;gap:10px}
+.mobile .rail-card{padding:13px;border-radius:12px}
+.mobile .side h2{font-size:13px}
+.mobile .rail-icon{width:28px;height:28px}
+.mobile .stage{padding-bottom:16px}
+.mobile .bar{height:auto;grid-template-columns:1fr 1fr 68px 1fr 1fr;padding:5px 0 calc(5px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.98);box-shadow:0 -2px 8px rgba(16,24,40,.05)}
+.mobile .bar button{height:50px;font-size:10px;color:var(--ink-3)}
+.mobile .bar button.on{color:var(--brand-strong)}
+.mobile .bar .plus{width:52px;height:52px;background:var(--brand);box-shadow:0 6px 16px rgba(37,99,235,.25)}
+.mobile .bar .plus.locked{background:var(--surface);color:var(--ink);border:1px dashed var(--line-2);box-shadow:none}
+.mobile .toast{bottom:76px;max-width:calc(100vw - 28px)}
+
+@media (max-width:1240px){
+  .page{grid-template-columns:minmax(0,1fr) 312px}
+  .nav button{padding:0 9px}
+  .brand{min-width:150px}
+}
+@media (max-width:1080px){
+  .page{grid-template-columns:minmax(0,1fr) 288px;gap:20px}
+}
+@media (max-width:920px){
+  .page{grid-template-columns:1fr}
+  .side{position:static}
+  .rail-card{padding:14px}
+}
+@media (max-width:819px){
+  .mobile .dsk,.mobile .od-btn.ext{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  .wh *, .wh *::before, .wh *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Dark mode — one attribute flips the whole console.
+   Same structure, same hierarchy; only the semantic tokens change. Anything
+   that must stay a "solid dark chip" regardless of theme (logo mark, toast,
+   stage badges, count pills) already uses --onyx, which doesn't move here.
+   ═════════════════════════════════════════════════════════════════════════ */
+.wh[data-theme="dark"]{
+  --paper:#0B0F17;
+  --surface:#11161F;
+  --sand:#171D28;
+  --line:#232B38;
+  --line-2:#3A4454;
+  --ink:#EDEFF3;
+  --ink-2:#A6AFBD;
+  --ink-3:#778394;
+  --pickup:#6EA1FF;
+  --return:#F0A257;
+  --wash:#4FD1C5;
+  --red:#F97066;
+  --red-d:#FDA29B;
+  --amber:#FDB022;
+  --gold:#6EA1FF;
+  --brand:#5B8DEF;
+  --brand-strong:#8AB4FF;
+  --brand-soft:#152238;
+  --green:#3CCB7F;
+  --green-soft:#0F2A1D;
+  --red-soft:#2A1315;
+  --amber-soft:#2A1F0B;
+  --teal-soft:#0E2624;
+  --return-soft:#2A1B0D;
+  --return-border:rgba(240,162,87,.4);
+  --red-border:rgba(249,112,102,.45);
+  --red-border-soft:rgba(249,112,102,.28);
+  --amber-border:rgba(253,176,34,.4);
+  --amber-line:#FDB022;
+  --teal-border:rgba(79,209,197,.4);
+  --brand-border:rgba(91,141,239,.45);
+  --brand-line:rgba(91,141,239,.6);
+  --onyx:#1B2434;
+  --onyx-ink:#F5F7FA;
+  --scrim:rgba(2,4,8,.66);
+  --skel-a:#161C27; --skel-b:#1E2633;
+  --shadow-1:0 1px 2px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.35);
+  --shadow-2:0 8px 24px rgba(0,0,0,.5),0 2px 8px rgba(0,0,0,.4);
+  --shadow-3:0 24px 64px rgba(0,0,0,.6),0 4px 20px rgba(0,0,0,.45);
+  --color-scheme:dark;
+}
+.wh[data-theme="dark"] .top{background:rgba(11,15,23,.86)}
+.wh[data-theme="dark"] .m-top{background:rgba(11,15,23,.9)}
+.wh[data-theme="dark"] .btn-new{box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.wh[data-theme="dark"] .row{background:var(--surface)}
+.wh[data-theme="dark"] .row:hover{border-color:var(--line-2)}
+.wh[data-theme="dark"] .sheet{border:1px solid rgba(255,255,255,.06)}
+.wh[data-theme="dark"] .inp{background:var(--surface);border-color:var(--line-2);color:var(--ink)}
+.wh[data-theme="dark"] .inp:focus{box-shadow:0 0 0 3px rgba(91,141,239,.22)}
+.wh[data-theme="dark"] .tg button[aria-pressed=true],
+.wh[data-theme="dark"] .pay button[aria-checked=true]{color:#0B0F17}
+.wh[data-theme="dark"] .day-status{background:var(--green-soft);color:var(--green)}
+.wh[data-theme="dark"] .stat,.wh[data-theme="dark"] .rail-card{background:var(--surface)}
+.theme-toggle{position:relative;overflow:hidden}
+.theme-toggle svg{transition:transform .3s ease,opacity .3s ease}
 `;
 
 /* ───────────── icons ───────────── */
-const ICONS = { House, CalendarDays, Shirt, UsersRound, Menu, Plus, Search, WifiOff, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
+const ICONS = {
+  House, CalendarDays, Shirt, UsersRound, Menu, Plus, Search, WifiOff, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   ArrowUpRight, ArrowDownLeft, Droplet, Check, TriangleAlert, Phone, Clock, X, Lock, Minus, Info, RotateCw, ShieldCheck,
-  Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors };
+  Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors, Sun, Moon
+};
 
 function Icon({ n, size = 18, sw = 2 }) {
   const node = ICONS[n];
   if (!node) return null;
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw}
-      strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {node.map(([tag, attrs], i) => React.createElement(tag, { key: i, ...attrs }))}
-    </svg>
-  );
+  if (typeof node === 'function' || (typeof node === 'object' && node && node.$$typeof)) {
+    const Component = node;
+    return <Component size={size} strokeWidth={sw} aria-hidden="true" />;
+  }
+  if (Array.isArray(node)) {
+    const elements = Array.isArray(node[0]) ? node : (node[2] || []);
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw}
+        strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {elements.map(([tag, attrs], i) => React.createElement(tag, { key: i, ...attrs }))}
+      </svg>
+    );
+  }
+  return null;
 }
 
 /* ───────────── helpers ───────────── */
@@ -514,10 +996,10 @@ function useMedia(q) {
 function ActBtn({ type, locked, solid, onClick, label, disabled, title }) {
   const T = TYPE[type];
   return (
-    <button className={cx('act', type, solid && 'solid', locked && 'locked')} onClick={onClick} disabled={disabled}
-      title={title || (locked ? 'Paused right now' : undefined)}>
+    <motion.button className={cx('act', type, solid && 'solid', locked && 'locked')} onClick={onClick} disabled={disabled}
+      whileTap={disabled ? undefined : { scale: 0.96 }} title={title || (locked ? 'Paused right now' : undefined)}>
       <Icon n={locked ? 'Lock' : T.icon} size={18} sw={2.4} />{label || T.verb}
-    </button>
+    </motion.button>
   );
 }
 const shortOf = (ev) => (ev.type === 'pickup' ? ev.lines.filter((l) => l.onRack !== undefined && l.onRack < l.qty) : []);
@@ -533,56 +1015,70 @@ function moneyLine(ev) {
 
 /* One event = one row. Identity: glyph shape (filled square / outlined square / circle),
    direction arrow, the word, and the button verb — never colour alone. */
-function EventRow({ ev, focus, expanded, late, lateMin, locked, mobile, onToggle, onAct, onTime, onOpen, onAltReady }) {
+function EventRow({ ev, focus, expanded, late, lateMin, locked, mobile, showMoney, onToggle, onAct, onTime, onOpen, onAltReady }) {
   const T = TYPE[ev.type];
   const sN = shortN(ev);
   const alt = altPending(ev);
-  const money = moneyLine(ev);
+  const money = showMoney ? moneyLine(ev) : null;
   const actBtn = (
     <ActBtn type={ev.type} locked={locked} solid={mobile || focus} onClick={() => onAct(ev)}
       disabled={alt && !locked} title={alt ? 'Alterations not ready yet' : undefined} />
   );
   return (
-    <li className={cx('row', ev.type, expanded && 'is-open')}>
+    <li className={cx('row', ev.type, focus && 'focused', expanded && 'is-open')}>
       <div className="row-line">
         <button className="row-hit" onClick={() => onToggle(ev.id)} aria-expanded={expanded}>
-          <span className={cx('glyph', ev.type)}><Icon n={T.icon} size={mobile ? 22 : 24} sw={2.4} /></span>
+          <span className={cx('glyph', ev.type)}><Icon n={T.icon} size={mobile ? 20 : 21} sw={2.4} /></span>
           <span className="row-text">
             <span className="row-name">
               <b>{ev.name}</b><span className="bid">#{ev.bid}</span>
-              {late && <span className="flag late"><Icon n="Clock" size={13} sw={2.6} />{inMin(lateMin)} late</span>}
-              {sN > 0 && <span className="flag wash"><Icon n="Droplet" size={13} sw={2.6} />{sN} in wash</span>}
-              {alt && <span className="chip-alt"><Icon n="Scissors" size={13} sw={2.4} />Alterations pending</span>}
+              {late && <span className="flag late"><Icon n="Clock" size={12} sw={2.6} />{inMin(lateMin)} late</span>}
+              {sN > 0 && <span className="flag wash"><Icon n="Droplet" size={12} sw={2.6} />{sN} in wash</span>}
+              {alt && <span className="chip-alt"><Icon n="Scissors" size={12} sw={2.4} />Alterations pending</span>}
             </span>
             <span className="row-sub"><span className="kind">{T.label}</span>{lineText(ev.lines)}</span>
           </span>
-          {mobile && <span className="chev"><Icon n="ChevronDown" size={20} /></span>}
+          {mobile && <span className="chev"><Icon n="ChevronDown" size={18} /></span>}
         </button>
-        {!mobile && actBtn}
+        {!mobile && <div className="row-action">{actBtn}</div>}
       </div>
-      {expanded && (
-        <div className="row-more">
-          {ev.party && <p className="party">{ev.party}</p>}
-          <ul className="chips">
-            {ev.lines.map((l) => <li key={l.id} className={l.onRack !== undefined && l.onRack < l.qty ? 'short' : undefined}>{l.name} <b>×{l.qty}</b>{l.onRack !== undefined && l.onRack < l.qty && ` · ${l.onRack} on rack`}</li>)}
-          </ul>
-          {money && <p className="money">{money}</p>}
-          <div className="more-actions">
-            <a className="link" href={telHref(ev.phone)}><Icon n="Phone" size={15} />{ev.phone}</a>
-            <a className="iconlink" href={waHref(ev.phone)} target="_blank" rel="noopener noreferrer"
-              aria-label={`WhatsApp ${ev.name}`} title="Open WhatsApp"><Icon n="MessageCircle" size={18} /></a>
-            <button className="link" onClick={() => onTime(ev)}><Icon n="CalendarClock" size={15} />Change time</button>
-            <button className="link" onClick={() => onOpen(ev)}>Open booking</button>
-          </div>
-          {alt && (
-            <p className="hint">
-              Hand over is paused until alterations are ready.{' '}
-              <button className="link" onClick={() => onAltReady(ev)}>Mark alterations ready</button>
-            </p>
-          )}
-          {mobile && actBtn}
-        </div>
-      )}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div className="row-more" style={{ overflow: 'hidden' }}
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: 'easeInOut' }}>
+            <div className="row-more-inner">
+              {ev.party && (
+                <div>
+                  <div className="detail-label">Party</div>
+                  <p className="party">{ev.party}</p>
+                </div>
+              )}
+              <div>
+                <div className="detail-label">Rental pieces</div>
+                <ul className="chips">
+                  {ev.lines.map((l) => <li key={l.id} className={l.onRack !== undefined && l.onRack < l.qty ? 'short' : undefined}>{l.name} <b>×{l.qty}</b>{l.onRack !== undefined && l.onRack < l.qty && ` · ${l.onRack} on rack`}</li>)}
+                </ul>
+              </div>
+              {money && <p className="money">{money}</p>}
+              <div className="more-actions">
+                <a className="link" href={telHref(ev.phone)}><Icon n="Phone" size={14} />Call {ev.phone}</a>
+                <a className="iconlink" href={waHref(ev.phone)} target="_blank" rel="noopener noreferrer"
+                  aria-label={`WhatsApp ${ev.name}`} title="Open WhatsApp"><Icon n="MessageCircle" size={17} /></a>
+                <button className="link" onClick={() => onTime(ev)}><Icon n="CalendarClock" size={14} />Change time</button>
+                <button className="link" onClick={() => onOpen(ev)}>Open booking</button>
+              </div>
+              {alt && (
+                <p className="hint">
+                  Hand over is paused until alterations are ready.{' '}
+                  <button className="link" onClick={() => onAltReady(ev)}>Mark alterations ready</button>
+                </p>
+              )}
+              {mobile && actBtn}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </li>
   );
 }
@@ -606,8 +1102,13 @@ function Sheet({ mobile, title, sub, onClose, children, summary, foot }) {
     return () => window.removeEventListener('keydown', f);
   }, [onClose]);
   return (
-    <div className="scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className={cx('sheet', mobile ? 'bottom' : 'center')} role="dialog" aria-modal="true" aria-label={title}>
+    <motion.div className="scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
+      <motion.div className={cx('sheet', mobile ? 'bottom' : 'center')} role="dialog" aria-modal="true" aria-label={title}
+        initial={mobile ? { y: '100%' } : { opacity: 0, scale: 0.96, y: 10 }}
+        animate={mobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
+        exit={mobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 8 }}
+        transition={{ type: 'spring', stiffness: 360, damping: 34 }}>
         <header className="sheet-h">
           <div><h2>{title}</h2>{sub && <p>{sub}</p>}</div>
           <button className="x" onClick={onClose} aria-label="Close"><Icon n="X" size={20} /></button>
@@ -615,8 +1116,8 @@ function Sheet({ mobile, title, sub, onClose, children, summary, foot }) {
         <div className="sheet-b">{children}</div>
         {summary && <div className="sum">{summary}</div>}
         {foot && <footer className="sheet-f">{foot}</footer>}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -635,7 +1136,7 @@ const SumRow = ({ label, value, total }) => <div className={cx('r', total && 'to
 /* Product picker + per-booking payment summary.
    Pickup:  balance must be collected (UPI or Cash) before the hand-over can be confirmed.
    Return:  a receipt-style refund summary; flagged lines need a written note and hold the final refund for a manager. */
-function LinesSheet({ kind, obj, mobile, onClose, onConfirm }) {
+function LinesSheet({ kind, obj, mobile, canViewMoney = true, onClose, onConfirm }) {
   const T = TYPE[kind];
   const cap = (l) => (kind === 'pickup' ? Math.min(l.qty, l.onRack === undefined ? l.qty : l.onRack) : l.qty);
   const [picks, setPicks] = useState(() => Object.fromEntries(obj.lines.map((l) => [l.id, cap(l)])));
@@ -649,12 +1150,13 @@ function LinesSheet({ kind, obj, mobile, onClose, onConfirm }) {
   const missingNote = flagged.some((l) => !flags[l.id].trim());
   const sN = kind === 'pickup' ? shortN(obj) : 0;
 
-  const showMoney = kind === 'pickup' && obj.rentalTotal !== undefined;
+  const showMoney = canViewMoney && kind === 'pickup' && obj.rentalTotal !== undefined;
   const needsPayment = showMoney && obj.balanceDue > 0;
+  const canCollectDeposit = canViewMoney;
   const depositRupees = depositOn ? Math.max(0, Number(depositAmt) || 0) : 0;
   const deposit = kind === 'return' ? obj.depositHeld || 0 : 0;
   const rentBal = kind === 'return' ? obj.rentalBalance || 0 : 0;
-  const showRefund = kind === 'return' && deposit > 0;
+  const showRefund = canViewMoney && kind === 'return' && deposit > 0;
   const review = flagged.length > 0 || !!obj.damageFlag;
   const partial = total < all;
   const net = deposit - rentBal;
@@ -670,11 +1172,11 @@ function LinesSheet({ kind, obj, mobile, onClose, onConfirm }) {
         <SumRow total label="Collect at pickup" value={inr(obj.balanceDue)} />
         {depositOn && depositRupees > 0 && <SumRow label="Caution deposit" value={inr(R(depositRupees))} />}
       </div>
-      <label className="depchk">
+      {canCollectDeposit && <label className="depchk">
         <input type="checkbox" checked={depositOn} onChange={(e) => setDepositOn(e.target.checked)} />
         Also take a security deposit
-      </label>
-      {depositOn && (
+      </label>}
+      {canCollectDeposit && depositOn && (
         <input className="inp sm" type="number" inputMode="numeric" min="0" placeholder="Deposit amount (₹)"
           value={depositAmt} onChange={(e) => setDepositAmt(e.target.value)} aria-label="Security deposit amount" />
       )}
@@ -861,6 +1363,20 @@ export default function WedHubHome({ config }) {
   const laundryRef = useRef(null);
   const toastT = useRef(null);
 
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('wh-theme');
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch { /* no-op */ }
+    return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+  const toggleTheme = () => setTheme((t) => {
+    const nt = t === 'dark' ? 'light' : 'dark';
+    try { localStorage.setItem('wh-theme', nt); } catch { /* no-op */ }
+    return nt;
+  });
+  const reducedMotion = useMedia('(prefers-reduced-motion: reduce)');
+
   const isToday = dayOff === 0;
   const failed = errored && !loading;
 
@@ -892,6 +1408,17 @@ export default function WedHubHome({ config }) {
     return true;
   };
   const retry = () => { setLoading(true); setTimeout(() => { setLoading(false); setErrored(false); setData(seed('busy')); }, 900); };
+
+  /* a small, tasteful burst when a booking is fully wrapped up — skipped under reduced motion */
+  const celebrate = () => {
+    if (reducedMotion) return;
+    confetti({
+      particleCount: 46, spread: 62, startVelocity: 32, gravity: 1.1, ticks: 160,
+      origin: { x: 0.5, y: 0.78 },
+      colors: theme === 'dark' ? ['#5B8DEF', '#4FD1C5', '#3CCB7F'] : ['#2563EB', '#0F766E', '#027A48'],
+      disableForReducedMotion: true,
+    });
+  };
 
   /* derived */
   const dayEvs = [
@@ -964,14 +1491,14 @@ export default function WedHubHome({ config }) {
 
   /* Pickup: balance collected (UPI/Cash) clears balanceDue. Return: deposit is refunded only when everything is back
      and nothing is flagged; otherwise it stays held for a manager. Damage notes flow to "Needs a manager". */
-  const confirmLines = (kind, src, obj, picks, flags, paid, depositCollected) => {
+  const confirmLines = (kind, src, obj, picks, flags, paid, depositCollected, canHandleMoney) => {
     const total = obj.lines.reduce((s, l) => s + (picks[l.id] || 0), 0);
     const flagged = obj.lines.filter((l) => (picks[l.id] || 0) > 0 && l.id in flags);
     const rest = applyPicks(obj.lines, picks);
-    const collected = kind === 'pickup' && obj.balanceDue > 0 ? obj.balanceDue : 0;
-    const deposit = kind === 'return' ? obj.depositHeld || 0 : 0;
+    const collected = canHandleMoney && kind === 'pickup' && obj.balanceDue > 0 ? obj.balanceDue : 0;
+    const deposit = canHandleMoney && kind === 'return' ? obj.depositHeld || 0 : 0;
     const review = flagged.length > 0 || !!obj.damageFlag;
-    const refund = kind === 'return' && rest.length === 0 && !review ? Math.max(0, deposit - (obj.rentalBalance || 0)) : 0;
+    const refund = canHandleMoney && kind === 'return' && rest.length === 0 && !review ? Math.max(0, deposit - (obj.rentalBalance || 0)) : 0;
     let msg;
     if (kind === 'pickup') {
       const bits = [];
@@ -983,11 +1510,11 @@ export default function WedHubHome({ config }) {
       if (flagged.length) msg += ` · ${flagged.length} flagged for a manager`;
       if (rest.length === 0 && deposit > 0) msg += review ? ' · refund pending manager review' : ` · refund ${inr(refund)}`;
     }
-    return run((d) => {
+    const ok = run((d) => {
       let { events, overdue, pool, defects } = d;
       const patch = (o) => ({
         ...o, lines: rest,
-        ...(kind === 'pickup' && collected ? { balanceDue: 0, collectedVia: paid } : {}),
+        ...(canHandleMoney && kind === 'pickup' && collected ? { balanceDue: 0, collectedVia: paid } : {}),
         ...(refund ? { depositHeld: 0, refunded: refund } : {}),
       });
       if (src === 'event') {
@@ -1010,6 +1537,8 @@ export default function WedHubHome({ config }) {
       }
       return { ...d, events, overdue, pool, defects };
     }, msg);
+    if (ok && rest.length === 0) celebrate();
+    return ok;
   };
 
   const confirmSendWash = (ids) => {
@@ -1034,13 +1563,15 @@ export default function WedHubHome({ config }) {
         : d.batches.map((b) => (b.id === batch.id ? { ...b, lines: b.lines.filter((l) => !ids.includes(l.id)) } : b)),
       events: d.events.map((e) => {
         if (e.id !== batch.needsId) return e;
-        return { ...e, lines: e.lines.map((l) => {
-          const w = washed.find((x) => x.name === l.name);
-          if (!w || l.onRack === undefined) return l;
-          const on = Math.min(l.qty, l.onRack + w.qty);
-          const { onRack, ...restL } = l;
-          return on >= l.qty ? restL : { ...l, onRack: on };
-        }) };
+        return {
+          ...e, lines: e.lines.map((l) => {
+            const w = washed.find((x) => x.name === l.name);
+            if (!w || l.onRack === undefined) return l;
+            const on = Math.min(l.qty, l.onRack + w.qty);
+            const { onRack, ...restL } = l;
+            return on >= l.qty ? restL : { ...l, onRack: on };
+          })
+        };
       }),
     }), `${n} ${plur(n, 'piece', 'pieces')} back on the rack`);
   };
@@ -1117,19 +1648,38 @@ export default function WedHubHome({ config }) {
     );
   };
 
-  const renderDayHead = () => (
-    <div className="dayhead">
-      <div>
-        <div className="overline">{relDay(dayOff)}</div>
-        <h1>{longDay(dayOff)}</h1>
+  const renderDayHead = () => {
+    const open = pend.filter((e) => e.type !== 'wash').length;
+    const complete = done.filter((e) => e.type !== 'wash').length;
+    const pickups = pend.filter((e) => e.type === 'pickup').length;
+    const returns = pend.filter((e) => e.type === 'return').length;
+    const washes = pend.filter((e) => e.type === 'wash').length;
+    return (
+      <div className="dayhead">
+        <div className="dayhead-top">
+          <div className="daycopy">
+            <div className="overline">{relDay(dayOff)}</div>
+            <div className="day-title-row">
+              <h1>{longDay(dayOff)}</h1>
+              <span className="day-status">{isToday ? 'Live schedule' : 'Planned day'}</span>
+            </div>
+            <p className="day-sub">{open ? `${open} open counter ${plur(open, 'task', 'tasks')}` : 'No open counter tasks'}{washes ? ` · ${washes} laundry ${plur(washes, 'item', 'items')} in the timeline` : ''}</p>
+          </div>
+          <div className="daynav">
+            {!isToday && <button className="textbtn" onClick={() => setDayOff(0)}>Back to today</button>}
+            <button className="iconbtn" onClick={() => shift(-1)} aria-label="Previous day"><Icon n="ChevronLeft" size={19} /></button>
+            <button className="iconbtn" onClick={() => shift(1)} aria-label="Next day"><Icon n="ChevronRight" size={19} /></button>
+          </div>
+        </div>
+        <div className="daystats" aria-label="Daily operational summary">
+          <div className="stat"><div className="stat-label">Open</div><div className="stat-value">{open}</div><div className="stat-note">counter tasks</div></div>
+          <div className="stat"><div className="stat-label">Completed</div><div className="stat-value">{complete}</div><div className="stat-note">{isToday ? 'earlier today' : 'already recorded'}</div></div>
+          <div className="stat"><div className="stat-label">Pickups</div><div className="stat-value">{pickups}</div><div className="stat-note">awaiting handover</div></div>
+          <div className="stat"><div className="stat-label">Returns</div><div className="stat-value">{returns}</div><div className="stat-note">awaiting return</div></div>
+        </div>
       </div>
-      <div className="daynav">
-        {!isToday && <button className="textbtn" onClick={() => setDayOff(0)}>Back to today</button>}
-        <button className="iconbtn" onClick={() => shift(-1)} aria-label="Previous day"><Icon n="ChevronLeft" size={20} /></button>
-        <button className="iconbtn" onClick={() => shift(1)} aria-label="Next day"><Icon n="ChevronRight" size={20} /></button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderRow = (e) => {
     if (e.type === 'wash') {
@@ -1139,7 +1689,7 @@ export default function WedHubHome({ config }) {
     const expanded = isFocus ? !toggled.has(e.id) : toggled.has(e.id);
     return (
       <EventRow key={e.id} ev={e} focus={isFocus} expanded={expanded} late={isToday && e.time < now} lateMin={now - e.time}
-        locked={offline || !isToday} mobile={mobile} onToggle={toggle} onAct={act}
+        locked={offline || !isToday} mobile={mobile} showMoney={role !== 'staff'} onToggle={toggle} onAct={act}
         onTime={(x) => (offline ? blocked() : setSheet({ kind: 'time', id: x.id }))}
         onOpen={(x) => info(`Booking #${x.bid} opens on the Booking Detail screen.`)} onAltReady={(x) => (offline ? blocked() : markAltReady(x))} />
     );
@@ -1244,12 +1794,12 @@ export default function WedHubHome({ config }) {
 
   const dueLabel = (b) => (b.dueDay < 0 ? `Late · due ${shortDay(b.dueDay)}` : b.dueDay === 0 ? `Due today ~${clockStr(b.dueTime)}` : `Due tomorrow ~${clockStr(b.dueTime)}`);
   const renderLaundry = () => {
-    if (failed) return <section ref={laundryRef}><h2>Laundry</h2><div className="note warn"><Icon n="Info" size={16} />Couldn’t load. Don’t assume nothing is waiting.</div></section>;
-    if (loading) return <div className="skel"><i /></div>;
+    if (failed) return <section ref={laundryRef} className="rail-card laundry-card"><h2><span className="rail-icon"><Icon n="Droplet" size={17} sw={2.4} /></span><span>Laundry</span><span className="rail-count">—</span></h2><div className="note warn"><Icon n="Info" size={16} />Couldn’t load. Don’t assume nothing is waiting.</div></section>;
+    if (loading) return <section className="rail-card laundry-card"><h2><span className="rail-icon"><Icon n="Droplet" size={17} sw={2.4} /></span><span>Laundry</span></h2><div className="skel"><i /></div></section>;
     const { pool, batches, rack } = data;
     return (
-      <section ref={laundryRef} aria-label="Laundry">
-        <h2><Icon n="Droplet" size={20} sw={2.4} />Laundry</h2>
+      <section ref={laundryRef} className="rail-card laundry-card" aria-label="Laundry">
+        <h2><span className="rail-icon"><Icon n="Droplet" size={17} sw={2.4} /></span><span>Laundry</span><span className="rail-count">{pool.length + batches.length}</span></h2>
         <p className="rule"><Icon n="Lock" size={14} />A garment can’t go back on the rack until you mark it washed.</p>
         <div className="pipe">
           <div className="stage">
@@ -1299,8 +1849,8 @@ export default function WedHubHome({ config }) {
   };
 
   const renderDesk = () => (
-    <section className="desk" aria-label="Needs a manager">
-      <h2><Icon n="ShieldCheck" size={20} sw={2.4} />Needs a manager</h2>
+    <section className="rail-card desk-card desk" aria-label="Needs a manager">
+      <h2><span className="rail-icon"><Icon n="ShieldCheck" size={17} sw={2.4} /></span><span>Needs a manager</span><span className="rail-count">{data.defects.length}</span></h2>
       {data.defects.length ? (
         <ul>
           {data.defects.map((d) => (
@@ -1315,17 +1865,27 @@ export default function WedHubHome({ config }) {
     </section>
   );
 
-  const toastEl = () => toast && (toast.tone === 'offline' ? (
-    <div className="toast offline" role="status">
-      <Icon n="WifiOff" size={22} />
-      <div><b>You’re offline — nothing was changed</b><span>Hand over, take back, wash and time changes are paused until you reconnect.</span></div>
-    </div>
-  ) : (
-    <div className="toast" role="status">
-      <span>{toast.msg}</span>
-      {toast.undo && <button onClick={() => { toast.undo(); notify({ tone: 'info', msg: 'Undone.' }); }}>Undo</button>}
-    </div>
-  ));
+  const toastEl = () => (
+    <AnimatePresence>
+      {toast && (
+        <motion.div key={`${toast.tone}-${toast.msg || 'offline'}`} className={cx('toast', toast.tone === 'offline' && 'offline')} role="status"
+          initial={{ opacity: 0, y: 18, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.96 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 32 }}>
+          {toast.tone === 'offline' ? (
+            <>
+              <Icon n="WifiOff" size={22} />
+              <div><b>You’re offline — nothing was changed</b><span>Hand over, take back, wash and time changes are paused until you reconnect.</span></div>
+            </>
+          ) : (
+            <>
+              <span>{toast.msg}</span>
+              {toast.undo && <button onClick={() => { toast.undo(); notify({ tone: 'info', msg: 'Undone.' }); }}>Undo</button>}
+            </>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   const renderSheet = () => {
     if (!sheet) return null;
@@ -1335,7 +1895,8 @@ export default function WedHubHome({ config }) {
       const obj = sheet.src === 'overdue' ? data.overdue.find((o) => o.id === sheet.id) : data.events.find((e) => e.id === sheet.id);
       if (!obj) return null;
       return <LinesSheet key={sheet.id} kind={k} obj={obj} mobile={mobile} onClose={close}
-        onConfirm={(picks, flags, paid, depositCollected) => { if (confirmLines(k, sheet.src, obj, picks, flags, paid, depositCollected)) close(); }} />;
+        canViewMoney={role !== 'staff'}
+        onConfirm={(picks, flags, paid, depositCollected) => { if (confirmLines(k, sheet.src, obj, picks, flags, paid, role !== 'staff' ? depositCollected : 0, role !== 'staff')) close(); }} />;
     }
     if (k === 'sendWash') {
       return <CheckSheet mobile={mobile} onClose={close} title="Send to wash" verb="Send"
@@ -1368,18 +1929,30 @@ export default function WedHubHome({ config }) {
 
   const nav = (label) => info(`${label} is its own screen — not part of Home.`);
 
+  const themeToggle = (size = 20) => (
+    <button className="iconbtn theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.span key={theme} initial={{ opacity: 0, rotate: -90, scale: 0.6 }} animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 90, scale: 0.6 }} transition={{ duration: 0.22 }} style={{ display: 'grid', placeItems: 'center' }}>
+          <Icon n={theme === 'dark' ? 'Sun' : 'Moon'} size={size} />
+        </motion.span>
+      </AnimatePresence>
+    </button>
+  );
+
   /* ───── mobile composition ───── */
   if (mobile) {
     return (
-      <div className="wh mobile">
+      <div className="wh mobile" data-theme={theme}>
         <style>{CSS}</style>
         <header className="m-top">
-          <div>
-            <div className="overline">{relDay(dayOff)}</div>
-            <h1>{shortDay(dayOff)}</h1>
+          <div className="m-top-copy">
+            <div className="m-brand"><b>WedHub</b> · Operations</div>
+            <div className="m-date"><span className="overline">{relDay(dayOff)}</span><h1>{shortDay(dayOff)}</h1></div>
           </div>
           <div className="m-tools">
             {alertChip()}{offlineChip()}
+            {themeToggle(22)}
             <button className="iconbtn" onClick={() => shift(-1)} aria-label="Previous day"><Icon n="ChevronLeft" size={22} /></button>
             <button className="iconbtn" onClick={() => shift(1)} aria-label="Next day"><Icon n="ChevronRight" size={22} /></button>
             <button className="iconbtn" onClick={() => setSheet({ kind: 'search' })} aria-label="Find a booking"><Icon n="Search" size={22} /></button>
@@ -1394,47 +1967,62 @@ export default function WedHubHome({ config }) {
               <Icon n="Droplet" size={16} />Laundry{laundryCount > 0 && <span className="cnt">{laundryCount}</span>}
             </button>
           </div>
-          {tab === 'schedule' ? renderSchedule() : <div className="side">{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</div>}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div key={`${tab}-${dayOff}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+              {tab === 'schedule' ? renderSchedule() : <div className="side">{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</div>}
+            </motion.div>
+          </AnimatePresence>
         </main>
         <nav className="bar" aria-label="Main">
           <button className="on"><Icon n="House" size={22} />Home</button>
           <button onClick={() => nav('Bookings')}><Icon n="CalendarDays" size={22} />Bookings</button>
-          <button className={cx('plus', offline && 'locked')} onClick={openNew} aria-label="New booking"><Icon n={offline ? 'Lock' : 'Plus'} size={26} sw={2.6} /></button>
+          <motion.button className={cx('plus', offline && 'locked')} onClick={openNew} aria-label="New booking" whileTap={{ scale: 0.92 }}><Icon n={offline ? 'Lock' : 'Plus'} size={26} sw={2.6} /></motion.button>
           <button onClick={() => nav('Inventory')}><Icon n="Shirt" size={22} />Inventory</button>
           <button onClick={() => nav('More')}><Icon n="Menu" size={22} />More</button>
         </nav>
         {toastEl()}
-        {renderSheet()}
+        <AnimatePresence>{renderSheet()}</AnimatePresence>
       </div>
     );
   }
 
   /* ───── desktop composition ───── */
-  const navItems = [['Home', true], ['Bookings'], ['Inventory'], ['Customers'], ...(role === 'owner' ? [['Reports'], ['Settings']] : [])];
+  const navItems = [
+    ['Home', true, 'House'],
+    ['Bookings', false, 'CalendarDays'],
+    ['Inventory', false, 'Shirt'],
+    ['Customers', false, 'UsersRound'],
+    ...(role === 'owner' ? [['Reports', false, 'ChartNoAxesCombined'], ['Settings', false, 'Settings']] : []),
+  ];
   return (
-    <div className="wh">
+    <div className="wh" data-theme={theme}>
       <style>{CSS}</style>
       <header className="top">
-        <div className="brand"><span className="mark">W</span>WedHub</div>
+        <div className="brand"><span className="mark">W</span><span className="brand-lockup"><span className="brand-name">WedHub</span><span className="brand-context">Operations</span></span></div>
         <nav className="nav" aria-label="Main">
-          {navItems.map(([label, on]) => <button key={label} className={on ? 'on' : undefined} onClick={() => !on && nav(label)}>{label}</button>)}
+          {navItems.map(([label, on, icon]) => <button key={label} className={on ? 'on' : undefined} onClick={() => !on && nav(label)}><Icon n={icon} size={16} sw={2.2} /><span>{label}</span></button>)}
         </nav>
         <span className="sp" />
         {alertChip()}{offlineChip()}
+        {themeToggle(20)}
         <button className="iconbtn" onClick={() => setSheet({ kind: 'search' })} aria-label="Find a booking (press /)"><Icon n="Search" size={20} /></button>
-        <button className={cx('btn-new', offline && 'locked')} onClick={openNew}>
+        <motion.button className={cx('btn-new', offline && 'locked')} onClick={openNew} whileTap={{ scale: 0.97 }}>
           <Icon n={offline ? 'Lock' : 'Plus'} size={20} sw={2.6} />New booking<kbd>N</kbd>
-        </button>
+        </motion.button>
         <span className="avatar" title={`${me.name} · ${me.title}`}>{me.ini}</span>
       </header>
       {banner()}
       {renderOverdue()}
       <main className="page">
-        <div>{renderDayHead()}{renderSchedule()}</div>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div className="main-col" key={dayOff} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+            {renderDayHead()}{renderSchedule()}
+          </motion.div>
+        </AnimatePresence>
         <aside className="side">{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</aside>
       </main>
       {toastEl()}
-      {renderSheet()}
+      <AnimatePresence>{renderSheet()}</AnimatePresence>
     </div>
   );
 }
