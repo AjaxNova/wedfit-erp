@@ -1,16 +1,10 @@
 // Update made: private repository sync test
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
 import {
   House, CalendarDays, Shirt, UsersRound, Menu, Plus, Search, WifiOff, ChevronLeft, ChevronRight, ChevronDown, ChevronUp,
   ArrowUpRight, ArrowDownLeft, Droplet, Check, TriangleAlert, Phone, Clock, X, Lock, Minus, Info, RotateCw,
   ShieldCheck, Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors, Sun, Moon,
 } from 'lucide-react';
-
-/* New deps for this pass — install before running:
-     npm i framer-motion canvas-confetti
-   Everything else (React, lucide-react) was already a dependency. */
 
 /* ═════════════════════════════════════════════════════════════════════════
    WedHub · Home (“Today”)
@@ -36,8 +30,8 @@ const CSS = `/* ── Tokens ────────────────�
   --ink:#1F1B17; --ink-2:#5C5448; --ink-3:#8A806F;
   --pickup:#2A3A8F; --return:#8F4A0F; --wash:#0E6A64;
   --red:#B3261E; --red-d:#7E1710; --amber:#7A4E00; --gold:#B8891F;
-  --serif:'Playfair Display','Iowan Old Style','Palatino Linotype',Georgia,serif;
-  --sans:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --serif:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --sans:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   /* type scale — six sizes, nothing else. fs-body now covers what fs-label used to (base text, sub-lines, inputs). */
   --fs-display:42px; --fs-h2:22px; --fs-title:20px; --fs-body:15.5px; --fs-time:20px; --fs-meta:13px;
   --r-lg:16px; --r-md:12px; --r-sm:8px;
@@ -234,6 +228,7 @@ const CSS = `/* ── Tokens ────────────────�
 .scrim{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex}
 .sheet{background:var(--surface);display:flex;flex-direction:column;max-height:92vh;box-shadow:0 30px 80px rgba(0,0,0,.3)}
 .sheet.center{margin:auto;width:520px;border-radius:var(--r-lg)}
+.sheet.center.sheet-wide{width:min(940px,calc(100vw - 48px))}
 .sheet.bottom{margin-top:auto;width:100%;border-radius:20px 20px 0 0}
 .sheet-h{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s5) var(--s5) var(--s2)}
 .sheet-h h2{font:700 var(--fs-title)/1.2 var(--sans);letter-spacing:-.005em}
@@ -268,6 +263,36 @@ const CSS = `/* ── Tokens ────────────────�
 .tg button[aria-pressed=true] small{color:#E6DCC6}
 .tg button.cur{border-style:dashed;border-color:var(--ink)}
 .inp{width:100%;height:52px;border:1.5px solid var(--ink);border-radius:var(--r-md);padding:0 var(--s4);font:inherit;font-size:16px;background:#fff;color:var(--ink)}
+.booking-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:4px;margin-bottom:18px;background:var(--sand);border-radius:10px}
+.booking-steps span{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:36px;color:var(--ink-3);font-size:11px;font-weight:700;white-space:nowrap}
+.booking-steps span:not(:last-child)::after{content:'';position:absolute;left:calc(50% + 27px);right:calc(-50% + 27px);top:50%;height:1px;background:var(--line-2)}
+.booking-steps b{position:relative;z-index:1;display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--surface);font-size:11px}
+.booking-steps i{font-style:normal}
+.booking-steps span.on{background:var(--surface);border-radius:7px;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.booking-steps span.done{color:var(--wash)}
+.booking-pane{display:grid;gap:14px}
+.booking-pane label>span{display:block;margin:0 0 6px;font-size:12px;font-weight:700;color:var(--ink-2)}
+.booking-grid{display:grid;gap:10px}.booking-grid.two{grid-template-columns:1fr 1fr}
+.date-summary,.customer-intro{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:10px;background:var(--sand);color:var(--wash)}
+.date-summary div,.customer-intro div{display:grid;gap:2px;color:var(--ink)}
+.date-summary small,.customer-intro small{font-size:12px;color:var(--ink-2)}
+.booking-check{display:flex;gap:10px;align-items:flex-start;padding:14px;border:1px solid var(--line-2);border-radius:10px;background:var(--surface)}
+.booking-check input,.inline-check input{width:18px;height:18px;margin:2px 0 0;accent-color:var(--wash);flex:none}
+.booking-check span{display:grid;gap:3px}.booking-check small{font-size:12px;line-height:1.4;color:var(--ink-2)}
+.booking-tabs{display:flex;gap:6px;overflow:auto;padding-bottom:2px}.booking-tabs button{min-height:40px;padding:0 12px;border:1px solid var(--line-2);border-radius:8px;white-space:nowrap;font-size:12px;font-weight:700;color:var(--ink-2)}
+.booking-tabs button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+.booking-subtabs{display:flex;gap:6px;flex-wrap:wrap}.booking-subtabs button{min-height:32px;padding:0 10px;border:1px dashed var(--line-2);border-radius:7px;font-size:11px;font-weight:700;color:var(--ink-2)}.booking-subtabs button[aria-pressed=true]{border-style:solid;background:var(--sand);color:var(--ink)}
+.booking-window{display:flex;gap:7px;align-items:center;flex-wrap:wrap;font-size:12px;font-weight:700;color:var(--ink-2)}.booking-window span{margin-left:auto;color:var(--wash);font-weight:600;font-size:11px}
+.inventory-list{display:grid;gap:8px}.inventory-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}.inventory-card.selected{border-color:var(--wash);box-shadow:inset 3px 0 var(--wash)}
+.inventory-card>div:first-child{display:grid;gap:2px;min-width:0}.inventory-card b{font-size:14px}.inventory-card small{font-size:11px;color:var(--ink-2)}.inventory-card em{font-size:11px;color:var(--ink-2);font-style:normal}.stock-ok{color:var(--wash)!important}.stock-bad{color:var(--red)!important;font-weight:700}
+.inventory-actions{display:flex;align-items:center}.inventory-actions .act{min-height:40px;padding:0 12px}.inventory-actions .step button{width:38px;height:38px}.inventory-actions .step output{min-width:28px;font-size:16px}
+.item-dates{grid-column:1 / -1;display:grid;gap:8px;padding-top:10px;border-top:1px dashed var(--line)}.inline-check{display:flex!important;align-items:center;gap:7px!important;margin:0!important;font-size:12px!important;color:var(--ink-2)}
+.booking-selection{display:grid;gap:3px;padding:11px 12px;border-left:3px solid var(--wash);background:var(--sand);font-size:12px}.booking-selection span{font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inventory-screen{position:fixed;inset:0;z-index:55;overflow:auto;background:var(--paper);color:var(--ink);animation:wh-fade .16s ease-out}.inventory-screen-head{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;min-height:68px;padding:0 clamp(18px,4vw,64px);background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}.inventory-screen-head>div{display:grid;justify-items:center;gap:2px}.inventory-screen-head b{font-size:15px}.inventory-screen-head span{font-size:11px;color:var(--ink-2)}.inventory-back{justify-self:start;display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:0 12px;border:1px solid var(--line-2);border-radius:8px;font-weight:700;font-size:12px}.inventory-back:hover{background:var(--sand)}.inventory-screen-head .x{justify-self:end}.inventory-screen-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,38%);min-height:245px;background:#111827;color:#fff}.inventory-screen-hero>div:first-child{display:flex;flex-direction:column;justify-content:center;gap:12px;padding:clamp(28px,5vw,72px)}.inventory-screen-hero .overline{color:#B8C5D4}.inventory-screen-hero h1{max-width:720px;color:#fff;font-size:clamp(30px,4vw,58px);line-height:1.02;letter-spacing:-.045em}.inventory-screen-hero p{max-width:520px;color:#C8D1DC;font-size:14px}.inventory-hero-art{min-height:245px;background-image:linear-gradient(90deg,rgba(11,15,23,.15),rgba(11,15,23,.03)),url('https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1600&q=82');background-size:cover;background-position:center;filter:saturate(.72) contrast(1.06)}.inventory-screen-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;max-width:1440px;margin:0 auto;padding:clamp(22px,4vw,56px) clamp(18px,4vw,64px) 80px}.inventory-catalog{min-width:0}.inventory-catalog-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;margin-bottom:18px}.inventory-catalog-head h2,.inventory-selection h2{font-size:22px;letter-spacing:-.02em}.inventory-catalog-head p,.inventory-selection-head p{margin-top:3px;font-size:12px;color:var(--ink-2)}.inventory-date-chip{display:flex;align-items:center;gap:7px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:11px;font-weight:700;white-space:nowrap}.inventory-category-rail{display:flex;gap:7px;overflow:auto;padding-bottom:4px;margin-bottom:18px}.inventory-category-rail button{min-height:42px;padding:0 14px;border:1px solid var(--line-2);border-radius:8px;white-space:nowrap;font-size:12px;font-weight:700;color:var(--ink-2)}.inventory-category-rail button[aria-selected=true]{background:var(--ink);border-color:var(--ink);color:#fff}.inventory-screen-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;grid-auto-flow:dense}.inventory-screen-card{overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--surface);transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}.inventory-screen-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(16,24,40,.12)}.inventory-screen-card.selected{border-color:var(--wash);box-shadow:inset 3px 0 var(--wash)}.inventory-card-visual{height:128px;background-size:cover;background-position:center;filter:saturate(.72) contrast(1.05)}.inventory-screen-card-body{display:grid;gap:8px;padding:14px}.inventory-screen-card-body>div:first-child{display:grid;gap:3px}.inventory-screen-card-body b{font-size:15px}.inventory-screen-card-body p{font-size:12px;color:var(--ink-2)}.inventory-screen-card-body em{font-size:12px;font-style:normal;color:var(--ink-2);font-weight:700}.inventory-screen-card-body>span{font-size:11px;font-weight:700}.inventory-screen-card-action{display:flex;justify-content:flex-end}.inventory-screen-card-action .act{min-height:40px;padding:0 12px}.inventory-item-date{display:grid;gap:8px;padding-top:8px;border-top:1px dashed var(--line)}.inventory-selection{position:sticky;top:92px;align-self:start;display:grid;gap:14px;padding:18px;border:1px solid var(--line-2);border-radius:14px;background:var(--surface);box-shadow:0 12px 32px rgba(16,24,40,.09)}.inventory-selection-head{display:flex;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid var(--line)}.inventory-selection-head span{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--sand);font-weight:800}.inventory-selection-lines{display:grid;max-height:360px;overflow:auto}.inventory-selection-lines>div{display:flex;justify-content:space-between;gap:8px;padding:11px 0;border-bottom:1px solid var(--line)}.inventory-selection-lines span{display:grid;gap:3px;min-width:0}.inventory-selection-lines b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.inventory-selection-lines small{font-size:10px;color:var(--ink-2)}.inventory-selection-lines button{width:30px;height:30px;border:1px solid var(--line-2);border-radius:7px;display:grid;place-items:center;flex:none}.inventory-selection-empty{display:grid;justify-items:center;gap:7px;padding:36px 12px;text-align:center;color:var(--ink-3)}.inventory-selection-empty b{color:var(--ink);font-size:13px}.inventory-selection-empty p{font-size:11px;line-height:1.45}.inventory-continue{display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;border-radius:9px;background:var(--ink);color:#fff!important;font-weight:800;font-size:12px}.inventory-continue:disabled{opacity:.35}.inventory-continue:not(:disabled):hover{background:var(--wash)}
+.inventory-layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:18px;align-items:start}.inventory-main{display:grid;gap:12px;min-width:0}.inventory-context{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:10px;background:var(--sand)}.inventory-context div{display:grid;gap:3px}.inventory-context small{font-size:11px;color:var(--ink-2)}.inventory-context>span{display:flex;gap:6px;align-items:center;white-space:nowrap;font-size:11px;font-weight:700;color:var(--ink-2)}
+.selection-tray{position:sticky;top:0;display:grid;gap:12px;padding:14px;border:1px solid var(--line-2);border-radius:12px;background:var(--surface);box-shadow:0 8px 24px rgba(16,24,40,.08)}.selection-tray-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid var(--line)}.selection-tray-head div{display:grid;gap:3px}.selection-tray-head small{font-size:11px;color:var(--ink-2)}.selection-tray-head>span{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--sand);font-size:12px;font-weight:800}.selection-lines{display:grid;gap:0;max-height:310px;overflow:auto}.selection-lines>div{display:flex;justify-content:space-between;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}.selection-lines span{display:grid;gap:2px;min-width:0}.selection-lines b{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.selection-lines small{font-size:10px;color:var(--ink-2);line-height:1.35}.selection-lines button{width:30px;height:30px;border:1px solid var(--line-2);border-radius:7px;display:grid;place-items:center;color:var(--ink-2);flex:none}.selection-lines button:hover{background:var(--sand);color:var(--red)}.selection-empty{display:grid;justify-items:center;gap:7px;text-align:center;padding:28px 10px;color:var(--ink-3)}.selection-empty p{font-weight:700;color:var(--ink);font-size:13px}.selection-empty small{font-size:11px;line-height:1.4}.selection-total{display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid var(--line);font-size:12px;color:var(--ink-2)}.selection-total b{color:var(--ink);font-size:16px}
+.review-head{display:flex;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}.review-head div{display:grid;gap:2px}.review-head small{font-size:12px;color:var(--ink-2)}.review-head>span{font-size:11px;font-weight:700;text-align:right;color:var(--ink-2)}
+.review-lines{display:grid;gap:0}.review-lines>div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}.review-lines small{display:block;color:var(--ink-2);font-size:11px;margin-top:2px}.review-lines b{white-space:nowrap}.bill{display:grid;gap:2px;padding-top:8px}.bill .r{min-height:30px}.bill label{margin-top:10px}.balance-line{display:flex;justify-content:space-between;padding:10px 0;color:var(--ink-2);font-size:12px}.balance-line b{color:var(--ink);font-size:14px}
 .res button{display:flex;justify-content:space-between;gap:var(--s3);width:100%;padding:var(--s3) 0;border-top:1px solid var(--line);text-align:left;min-height:52px;align-items:center}
 .res span{color:var(--ink-2);font-size:var(--fs-body)}
 .res .none{padding:var(--s4) 0;color:var(--ink-2)}
@@ -408,8 +433,8 @@ const CSS = `/* ── Tokens ────────────────�
   --brand-border:#B9D0FF; --brand-line:#8EB5FF;
   --color-scheme:light;
   color-scheme:var(--color-scheme);
-  --serif:'Playfair Display','Iowan Old Style','Palatino Linotype',Georgia,serif;
-  --sans:'DM Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --serif:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --sans:'Outfit',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --r-xl:18px;
   --r-lg:14px;
   --r-md:10px;
@@ -768,6 +793,181 @@ const CSS = `/* ── Tokens ────────────────�
   .wh *, .wh *::before, .wh *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
 
+/* Operational rhythm: short, predictable transitions and dense scan lines. */
+.view-enter{animation:wh-enter .16s ease-out both}
+.row-more-enter{animation:wh-expand .14s ease-out both}
+.scrim-enter{animation:wh-fade .14s ease-out both}
+.sheet-enter{animation:wh-sheet .18s ease-out both}
+.toast-enter{animation:wh-toast .18s ease-out both}
+@keyframes wh-enter{from{opacity:.72;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes wh-expand{from{opacity:.5;transform:translateY(-3px)}to{opacity:1;transform:none}}
+@keyframes wh-fade{from{opacity:0}to{opacity:1}}
+@keyframes wh-sheet{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes wh-toast{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+.iconbtn,.x,.od-btn,.act,.btn-new,.bar button,.segm button{min-height:44px}
+.daystats{grid-template-columns:repeat(4,minmax(112px,1fr));gap:8px}
+.stat{min-height:68px;padding:10px 12px}
+.page{gap:24px}
+.rows{gap:6px}
+.row{border:1px solid var(--line);border-radius:11px;background:var(--surface);box-shadow:var(--shadow-1)}
+.group.focus .rows .row{border-color:var(--brand-border)}
+.group.focus .rows{padding:0 1px 1px}
+.group .tab{font-size:10px;letter-spacing:.1em}
+.top{height:60px}
+.top .nav button{min-height:44px}
+@media (max-width:819px){
+  .mobile .iconbtn{width:44px;height:44px}
+  .mobile .m-tools{gap:1px}
+  .mobile .page{padding-bottom:124px}
+  .mobile .row{box-shadow:none}
+  .mobile .bar button{min-height:52px}
+}
+
+/* Final console pass: keep the exception module framed at every width. */
+.od{max-width:1480px;margin:0 auto;padding:0 var(--gutter);background:transparent;color:var(--ink)}
+.od-in{max-width:none;margin:0;padding:0;border:1px solid var(--red-border);border-radius:10px;overflow:hidden;background:var(--surface)}
+.od-head{border:0;border-bottom:1px solid var(--red-border-soft);border-radius:0;background:var(--red-soft);padding:0 14px;min-height:46px}
+.od-row{border-top:1px solid var(--line);padding:14px 14px;background:var(--surface)}
+.od-row:last-of-type{border-bottom:0}
+.od-more{border:0;border-top:1px solid var(--line);border-radius:0;padding:12px 14px;background:var(--surface)}
+.od-mini{padding:0 var(--gutter)}
+.od-mini-row{margin:0;padding:0 14px;border:1px solid var(--red-border);border-radius:10px;background:var(--red-soft);color:var(--red)}
+.od-clear{padding-left:var(--gutter);padding-right:var(--gutter)}
+.top{background:#182230;color:#F8FAFC;border-bottom-color:#263447}
+.top .brand-name,.top .brand{color:#F8FAFC}
+.top .brand-context,.top .nav button,.top .iconbtn{color:#AAB7C8}
+.top .nav button:hover{background:#243245;color:#fff}
+.top .nav button.on{background:#2C4059;color:#fff}
+.top .avatar{background:#263447;border-color:#3A4A60;color:#F8FAFC}
+.top .btn-new{background:#F8FAFC;border-color:#F8FAFC;color:#182230}
+.top .btn-new:hover{background:#DDE7F2}
+.top .iconbtn:hover{background:#243245;color:#fff}
+.row,.rail-card,.stat{border-radius:9px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.row:hover{box-shadow:0 2px 8px rgba(16,24,40,.08)}
+@media (min-width:820px) and (max-width:1080px){
+  .top{gap:10px;padding:0 18px}
+  .brand{min-width:132px}
+  .brand-context,.top .btn-new kbd{display:none}
+  .page{padding-left:20px;padding-right:20px}
+}
+@media (max-width:819px){
+  .mobile .od{margin:0;padding:0 16px}
+  .mobile .od-in{padding:0}
+  .mobile .od-mini{padding:0 16px}
+  .mobile .od-mini-row{padding:0 12px}
+  .mobile .od-head{padding:0 12px}
+  .mobile .od-row{padding:12px}
+  .mobile .m-tools .pill{display:none}
+  .mobile .od-btn.solid{width:38px;height:38px;padding:0;overflow:hidden}
+  .mobile .od-btn.solid .lbl{display:none}
+  .mobile .m-top{background:#182230;color:#F8FAFC;border-bottom-color:#263447}
+  .mobile .m-brand,.mobile .m-date h1{color:#F8FAFC}
+  .mobile .m-brand b,.mobile .m-date .overline{color:#AAB7C8}
+  .mobile .m-tools .iconbtn{color:#D6E0EC}
+  .mobile .m-tools .iconbtn:hover{background:#243245}
+  .mobile .dayhead-top{align-items:flex-start}
+  .mobile .dayhead h1{font-size:30px}
+  .mobile .daystats{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .mobile .stat{min-height:64px}
+}
+@media (max-width:420px){
+  .mobile .m-tools .iconbtn:nth-last-child(2){display:none}
+  .mobile .m-date h1{font-size:25px}
+  .mobile .page{padding-left:12px;padding-right:12px}
+  .mobile .od{padding-left:12px;padding-right:12px}
+  .mobile .od-mini{padding-left:12px;padding-right:12px}
+}
+
+/* Desktop composition: a compact control rail keeps the workspace dense and task-first. */
+@media (min-width:820px){
+  .wh:not(.mobile){padding-left:220px;min-height:100vh;background:var(--paper)}
+  .wh:not(.mobile) .top{position:fixed;inset:0 auto 0 0;width:220px;height:100vh;z-index:30;display:flex;flex-direction:column;align-items:stretch;gap:18px;padding:22px 14px;background:#101923;border:0;color:#F6F8FB;box-shadow:12px 0 30px rgba(5,10,18,.16)}
+  .wh:not(.mobile) .top{border-right:1px solid #304258}
+  .wh:not(.mobile) .brand{min-width:0;padding:0 10px 20px;border-bottom:1px solid #263546}
+  .wh:not(.mobile) .brand-name{color:#F6F8FB}
+  .wh:not(.mobile) .brand-context{color:#91A1B4}
+  .wh:not(.mobile) .nav{display:grid;gap:5px;align-self:stretch}
+  .wh:not(.mobile) .nav button{justify-content:flex-start;height:44px;padding:0 12px;color:#9FAFC2;border-radius:7px}
+  .wh:not(.mobile) .nav button.on{background:#22364C;color:#F6F8FB;box-shadow:inset 3px 0 0 #6EA1FF}
+  .wh:not(.mobile) .nav button:hover{background:#1C2B3B;color:#fff}
+  .wh:not(.mobile) .top .sp{flex:1}
+  .wh:not(.mobile) .top>.brand{order:1}
+  .wh:not(.mobile) .top>.nav{order:2}
+  .wh:not(.mobile) .top>.btn-new{order:3}
+  .wh:not(.mobile) .top>.sp{order:4}
+  .wh:not(.mobile) .top>.pill{order:5}
+  .wh:not(.mobile) .top>.theme-toggle{order:6}
+  .wh:not(.mobile) .top>.iconbtn{order:7}
+  .wh:not(.mobile) .top>.avatar{order:8}
+  .wh:not(.mobile) .top>.pill{width:100%;justify-content:flex-start}
+  .wh:not(.mobile) .top>.iconbtn{align-self:flex-start}
+  .wh:not(.mobile) .top>.theme-toggle,.wh:not(.mobile) .top>.top-tool{width:100%;height:44px}
+  .wh:not(.mobile) .top>.btn-new{width:100%;justify-content:flex-start;background:#6EA1FF;border-color:#6EA1FF;color:#08111B}
+  .wh:not(.mobile) .top>.avatar{align-self:flex-start}
+  .wh:not(.mobile) .page{padding-top:18px}
+  .wh:not(.mobile) .side{top:18px}
+  .wh:not(.mobile) .dayhead{padding:16px;margin-bottom:16px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+  .wh:not(.mobile) .dayhead h1{font-size:36px}
+  .wh:not(.mobile) .dayhead-top{padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .wh:not(.mobile) .daystats{margin-top:12px}
+  .wh:not(.mobile) .stat{border-top:3px solid var(--brand);border-radius:7px}
+  .wh:not(.mobile) .stat:nth-child(2){border-top-color:var(--green)}
+  .wh:not(.mobile) .stat:nth-child(3){border-top-color:var(--pickup)}
+  .wh:not(.mobile) .stat:nth-child(4){border-top-color:var(--return)}
+  .wh:not(.mobile) .od{padding-top:12px;padding-bottom:12px}
+  .wh:not(.mobile) .od-in{box-shadow:0 5px 18px rgba(16,24,40,.08)}
+  .wh:not(.mobile) .od-head{padding:0 16px;min-height:50px}
+  .wh:not(.mobile) .od-row{padding:17px 16px}
+}
+@media (min-width:820px) and (max-width:1080px){
+  .wh:not(.mobile){padding-left:184px}
+  .wh:not(.mobile) .top{width:184px;padding-left:10px;padding-right:10px}
+  .wh:not(.mobile) .brand{padding-left:6px}
+  .wh:not(.mobile) .page{grid-template-columns:1fr}
+  .wh:not(.mobile) .side{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.wh[data-theme="dark"] .act.solid.wash{color:#061B1A}
+.wh[data-theme="dark"] .stage:nth-child(2) .stage-n{color:#061B1A}
+.wh[data-theme="dark"] .marker .glyph.wash{color:#67E8DF}
+.od{scroll-margin-top:18px}
+.brand-date{display:block;margin-top:5px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#91A1B4}
+.top-action-label{font-size:11px;font-weight:800;white-space:nowrap}
+.top-tool,.theme-toggle{display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;padding:0 10px}
+.mobile .top-action-label{display:none}
+.side{padding-top:0}
+.mobile .side{margin-top:0}
+.mobile .side>.rail-card:first-child{margin-top:0}
+.wh:not(.mobile):not([data-theme="dark"]){--paper:#E7EDF3;--surface:#F7F9FB;--sand:#DCE5EE;--line:#C4D0DC;--line-2:#8797A8;--ink:#17202B;--ink-2:#445466;--ink-3:#647589;--brand:#285EA8;--brand-strong:#1E4E90;--brand-soft:#DCE9F8;--green:#13795B;--green-soft:#DDF4EA;--red-soft:#FBE4E2;--amber-soft:#FFF0D1;--teal-soft:#D9F2EF}
+.wh:not(.mobile):not([data-theme="dark"]) .top{background:#E7EDF3;color:#17202B;border-right-color:#B3C0CE;box-shadow:12px 0 30px rgba(41,56,72,.12)}
+.wh:not(.mobile):not([data-theme="dark"]) .top .brand-name,.wh:not(.mobile):not([data-theme="dark"]) .top .brand{color:#17202B}
+.wh:not(.mobile):not([data-theme="dark"]) .top .brand-context,.wh:not(.mobile):not([data-theme="dark"]) .top .nav button,.wh:not(.mobile):not([data-theme="dark"]) .top .iconbtn{color:#586B7E}
+.wh:not(.mobile):not([data-theme="dark"]) .top .brand{border-color:#C1CDD9}
+.wh:not(.mobile):not([data-theme="dark"]) .top .nav button:hover{background:#D5E0EB;color:#17202B}
+.wh:not(.mobile):not([data-theme="dark"]) .top .nav button.on{background:#C9DCF2;color:#1E4E90;box-shadow:inset 3px 0 0 #285EA8}
+.wh:not(.mobile):not([data-theme="dark"]) .top>.btn-new{background:#285EA8;border-color:#285EA8;color:#fff}
+.wh:not(.mobile):not([data-theme="dark"]) .top .avatar{background:#D5E0EB;border-color:#B5C4D3;color:#17202B}
+.wh:not(.mobile):not([data-theme="dark"]) .brand-date{color:#607286}
+.wh[data-theme="dark"] .top-action-label{color:#C7D3E0}
+.wh:not(.mobile):not([data-theme="dark"]) .top-action-label{color:#506377}
+.wh:not(.mobile) .top-tool:hover,.wh:not(.mobile) .theme-toggle:hover{background:#243245;color:#fff}
+.wh:not(.mobile):not([data-theme="dark"]) .top-tool:hover,.wh:not(.mobile):not([data-theme="dark"]) .theme-toggle:hover{background:#D5E0EB;color:#17202B}
+.quick-booking{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;padding:13px;background:var(--surface);border:1px solid var(--brand-border);border-left:3px solid var(--brand);border-radius:9px;box-shadow:var(--shadow-1)}
+.quick-booking-icon{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;background:var(--brand);color:#fff}
+.quick-booking-copy{min-width:0}
+.quick-booking-copy h2{font-size:13px;line-height:1.2;font-weight:800;color:var(--ink)}
+.quick-booking-copy p{margin-top:3px;font-size:10px;line-height:1.35;color:var(--ink-3)}
+.quick-booking-action{grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:6px;height:36px;border-radius:7px;background:var(--brand);color:#fff;font-size:11px;font-weight:800}
+.quick-booking-action:hover{background:var(--brand-strong)}
+.quick-booking-action.locked{background:var(--sand);color:var(--ink-2);border:1px dashed var(--line-2)}
+.pipe .stage::before{content:'';left:13px;top:30px;bottom:4px;border-left:2px dotted #99D8D2}
+.wh[data-theme="dark"] .pipe .stage::before{border-left-color:#4FD1C5}
+.pipe .stage{padding-bottom:22px}
+.pipe .stage:last-child{padding-bottom:0}
+.marker{background:var(--surface);border:1px dashed #99D8D2}
+.marker .glyph.wash{background:transparent;border:1px dotted #99D8D2;color:#0F766E}
+.wh[data-theme="dark"] .marker{background:var(--surface);border-color:#4FD1C5}
+.wh[data-theme="dark"] .marker .glyph.wash{border-color:#4FD1C5;color:#67E8DF}
+
 /* ═════════════════════════════════════════════════════════════════════════
    Dark mode — one attribute flips the whole console.
    Same structure, same hierarchy; only the semantic tokens change. Anything
@@ -830,6 +1030,48 @@ const CSS = `/* ── Tokens ────────────────�
 .wh[data-theme="dark"] .stat,.wh[data-theme="dark"] .rail-card{background:var(--surface)}
 .theme-toggle{position:relative;overflow:hidden}
 .theme-toggle svg{transition:transform .3s ease,opacity .3s ease}
+.booking-steps span:not(:last-child)::after{display:none!important}
+.inventory-screen{padding:20px;background:rgba(11,15,23,.68)}
+.inventory-screen-shell{width:min(1360px,100%);max-height:calc(100vh - 40px);overflow:auto;border:1px solid var(--line-2);border-radius:16px;background:var(--paper);box-shadow:0 30px 100px rgba(0,0,0,.35)}
+.inventory-screen-hero{grid-template-columns:1fr;min-height:154px}.inventory-screen-hero>div:first-child{padding:28px 42px}.inventory-screen-hero h1{font-size:clamp(28px,3.5vw,48px)}.inventory-screen-hero p{font-size:13px}.inventory-hero-art{display:none}.inventory-screen-body{padding:28px 42px 44px}
+@media (max-width:819px){
+  .sheet.center.sheet-wide{width:100%}
+  .sheet.bottom .booking-pane{gap:12px}
+  .sheet.bottom .booking-grid.two{grid-template-columns:1fr}
+  .sheet.bottom .booking-tabs{margin-right:-4px}
+  .sheet.bottom .booking-window span{width:100%;margin-left:22px}
+  .sheet.bottom .review-head{display:grid}
+  .sheet.bottom .review-head>span{text-align:left}
+  .sheet.bottom .booking-steps span{font-size:10px}
+  .sheet.bottom .booking-steps{margin-bottom:12px}
+  .sheet.bottom .booking-steps span{gap:4px}
+  .sheet.bottom .booking-steps span:not(:last-child)::after{left:calc(50% + 18px);right:calc(-50% + 18px)}
+  .sheet.bottom .booking-steps i{font-size:10px}
+  .sheet.bottom .inventory-layout{grid-template-columns:1fr;gap:12px}
+  .sheet.bottom .inventory-context{display:grid;gap:8px}
+  .sheet.bottom .inventory-context>span{white-space:normal}
+  .sheet.bottom .selection-tray{position:static;order:0;box-shadow:none}
+  .sheet.bottom .selection-empty{grid-template-columns:auto 1fr;text-align:left;justify-items:start;padding:14px 10px}
+  .sheet.bottom .selection-empty svg{grid-row:span 2}
+  .sheet.bottom .selection-lines{max-height:180px}
+  .inventory-screen-head{grid-template-columns:1fr auto;gap:8px;padding:0 14px}
+  .inventory-screen-head>div{justify-items:start;grid-column:1}
+  .inventory-screen-head .x{grid-column:2;grid-row:1}
+  .inventory-screen-head .inventory-back{font-size:0;border:0;padding:0;width:44px;justify-content:center}
+  .inventory-screen-head .inventory-back svg{width:20px;height:20px}
+  .inventory-screen{padding:0;background:var(--paper)}
+  .inventory-screen-shell{max-height:none;border:0;border-radius:0;box-shadow:none}
+  .inventory-screen-hero{grid-template-columns:1fr;min-height:0}
+  .inventory-screen-hero>div:first-child{padding:30px 20px 24px}
+  .inventory-screen-hero h1{font-size:34px}
+  .inventory-hero-art{min-height:150px}
+  .inventory-screen-body{grid-template-columns:1fr;gap:18px;padding:22px 16px 100px}
+  .inventory-catalog-head{display:grid;gap:10px;align-items:start}
+  .inventory-date-chip{justify-self:start}
+  .inventory-screen-grid{grid-template-columns:1fr}
+  .inventory-selection{position:static;order:2}
+  .inventory-selection-lines{max-height:220px}
+}
 `;
 
 /* ───────────── icons ───────────── */
@@ -839,7 +1081,27 @@ const ICONS = {
   Hourglass, CalendarClock, Flag, Settings, ChartNoAxesCombined, MessageCircle, Scissors, Sun, Moon
 };
 
+// Selected from Supericons' verified Tabler outline set. Keeping these as
+// inline SVGs preserves the no-new-dependency constraint while giving the
+// navigation and status surfaces a tighter, more deliberate icon language.
+const SUPERICON_SVGS = {
+  House: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 4h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1"/><path d="M5 16h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1"/><path d="M15 12h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-6a1 1 0 0 1 1 -1"/><path d="M15 4h4a1 1 0 0 1 1 1v2a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1v-2a1 1 0 0 1 1 -1"/></svg>',
+  CalendarDays: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/><path d="M11 15h1"/><path d="M12 15v3"/></svg>',
+  Shirt: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M15 4l6 2v5h-3v8a1 1 0 0 1 -1 1h-10a1 1 0 0 1 -1 -1v-8h-3v-5l6 -2a3 3 0 0 0 6 0"/></svg>',
+  ShieldCheck: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.46 20.846a12 12 0 0 1 -7.96 -14.846a12 12 0 0 0 8.5 -3a12 12 0 0 0 8.5 3a12 12 0 0 1 -.09 7.06"/><path d="M15 19l2 2l4 -4"/></svg>',
+  Search: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 10a7 7 0 1 0 14 0a7 7 0 0 0 -14 0"/><path d="M21 21l-6 -6"/></svg>',
+  Plus: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
+  Check: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"/><path d="M9 12l2 2l4 -4"/></svg>',
+  TriangleAlert: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 9v4"/><path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0"/><path d="M12 16h.01"/></svg>',
+  Moon: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454l0 .008"/></svg>',
+};
+
 function Icon({ n, size = 18, sw = 2 }) {
+  const superSvg = SUPERICON_SVGS[n];
+  if (superSvg) {
+    const svg = superSvg.replace(/width="24"/g, 'width="100%"').replace(/height="24"/g, 'height="100%"');
+    return <span className="supericon" style={{ width: size, height: size, display: 'inline-flex', flex: '0 0 auto' }} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svg }} />;
+  }
   const node = ICONS[n];
   if (!node) return null;
   if (typeof node === 'function' || (typeof node === 'object' && node && node.$$typeof)) {
@@ -997,10 +1259,10 @@ function useMedia(q) {
 function ActBtn({ type, locked, solid, onClick, label, disabled, title }) {
   const T = TYPE[type];
   return (
-    <motion.button className={cx('act', type, solid && 'solid', locked && 'locked')} onClick={onClick} disabled={disabled}
-      whileTap={disabled ? undefined : { scale: 0.96 }} title={title || (locked ? 'Paused right now' : undefined)}>
+    <button className={cx('act', type, solid && 'solid', locked && 'locked')} onClick={onClick} disabled={disabled}
+      title={title || (locked ? 'Paused right now' : undefined)}>
       <Icon n={locked ? 'Lock' : T.icon} size={18} sw={2.4} />{label || T.verb}
-    </motion.button>
+    </button>
   );
 }
 const shortOf = (ev) => (ev.type === 'pickup' ? ev.lines.filter((l) => l.onRack !== undefined && l.onRack < l.qty) : []);
@@ -1043,11 +1305,8 @@ function EventRow({ ev, focus, expanded, late, lateMin, locked, mobile, showMone
         </button>
         {!mobile && <div className="row-action">{actBtn}</div>}
       </div>
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div className="row-more" style={{ overflow: 'hidden' }}
-            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: 'easeInOut' }}>
+      {expanded && (
+          <div className="row-more row-more-enter" style={{ overflow: 'hidden' }}>
             <div className="row-more-inner">
               {ev.party && (
                 <div>
@@ -1077,9 +1336,8 @@ function EventRow({ ev, focus, expanded, late, lateMin, locked, mobile, showMone
               )}
               {mobile && actBtn}
             </div>
-          </motion.div>
+          </div>
         )}
-      </AnimatePresence>
     </li>
   );
 }
@@ -1096,20 +1354,15 @@ function WashMarker({ ev, late, lateMin, onLaundry }) {
 }
 
 /* ───────────── sheets ───────────── */
-function Sheet({ mobile, title, sub, onClose, children, summary, foot }) {
+function Sheet({ mobile, title, sub, onClose, children, summary, foot, wide = false }) {
   useEffect(() => {
     const f = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', f);
     return () => window.removeEventListener('keydown', f);
   }, [onClose]);
   return (
-    <motion.div className="scrim" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}>
-      <motion.div className={cx('sheet', mobile ? 'bottom' : 'center')} role="dialog" aria-modal="true" aria-label={title}
-        initial={mobile ? { y: '100%' } : { opacity: 0, scale: 0.96, y: 10 }}
-        animate={mobile ? { y: 0 } : { opacity: 1, scale: 1, y: 0 }}
-        exit={mobile ? { y: '100%' } : { opacity: 0, scale: 0.97, y: 8 }}
-        transition={{ type: 'spring', stiffness: 360, damping: 34 }}>
+    <div className="scrim scrim-enter" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className={cx('sheet', mobile ? 'bottom' : 'center', wide && 'sheet-wide', 'sheet-enter')} role="dialog" aria-modal="true" aria-label={title}>
         <header className="sheet-h">
           <div><h2>{title}</h2>{sub && <p>{sub}</p>}</div>
           <button className="x" onClick={onClose} aria-label="Close"><Icon n="X" size={20} /></button>
@@ -1117,8 +1370,8 @@ function Sheet({ mobile, title, sub, onClose, children, summary, foot }) {
         <div className="sheet-b">{children}</div>
         {summary && <div className="sum">{summary}</div>}
         {foot && <footer className="sheet-f">{foot}</footer>}
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }
 
@@ -1323,13 +1576,135 @@ function SearchSheet({ data, mobile, onClose, onPick }) {
   );
 }
 
-function NewSheet({ mobile, onClose, onGo }) {
-  const [q, setQ] = useState('');
+const bookingDate = (offset = 0) => {
+  const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() + offset);
+  return d.toISOString().slice(0, 10);
+};
+const bookingDateLabel = (value) => value ? new Date(`${value}T12:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Choose a date';
+const BOOKING_CATEGORIES = [
+  { id: 'suits', label: 'Suits' }, { id: 'sherwanis', label: 'Sherwanis' }, { id: 'jodhpuri', label: 'Jodhpuri' },
+  { id: 'accessories', label: 'Accessories' }, { id: 'groomsmen', label: 'Groomsmen' },
+];
+const BOOKING_IMAGES = {
+  suits: 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1200&q=82',
+  sherwanis: 'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=1200&q=82',
+  jodhpuri: 'https://images.unsplash.com/photo-1598808503746-f34c53b9323e?auto=format&fit=crop&w=1200&q=82',
+  accessories: 'https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=1200&q=82',
+  groomsmen: 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?auto=format&fit=crop&w=1200&q=82',
+};
+const BOOKING_STOCK = [
+  { id: 'bs1', category: 'suits', name: 'Suit · Navy', detail: 'Classic two-piece · regular fit', price: 3500, stock: 4, blocked: [{ start: bookingDate(14), end: bookingDate(14), reason: 'reserved for a wedding' }] },
+  { id: 'bs2', category: 'suits', name: 'Suit · Charcoal', detail: 'Two-piece · slim fit', price: 3800, stock: 3, blocked: [] },
+  { id: 'sh1', category: 'sherwanis', name: 'Sherwani · Ivory', detail: 'Embroidered collar · sizes 38–44', price: 6000, stock: 3, blocked: [{ start: bookingDate(18), end: bookingDate(20), reason: 'out for another booking' }] },
+  { id: 'sh2', category: 'sherwanis', name: 'Sherwani · Maroon', detail: 'Textured jacquard · sizes 38–44', price: 6500, stock: 2, blocked: [] },
+  { id: 'jo1', category: 'jodhpuri', name: 'Jodhpuri · Navy', detail: 'Bandhgala · matching trouser', price: 4800, stock: 2, blocked: [] },
+  { id: 'ac1', category: 'accessories', name: 'Bow tie · Black', detail: 'Adjustable satin bow tie', price: 450, stock: 8, blocked: [] },
+  { id: 'ac2', category: 'accessories', name: 'Formal shoes · Black', detail: 'Polished leather · sizes 7–11', price: 900, stock: 6, blocked: [] },
+  { id: 'ac3', category: 'accessories', name: 'Stole · Gold', detail: 'Silk finish · one size', price: 700, stock: 5, blocked: [] },
+  { id: 'gm1', category: 'groomsmen', sub: 'Suits', name: 'Groomsmen suit · Navy', detail: 'Group rate · per person', price: 2600, stock: 7, blocked: [] },
+  { id: 'gm2', category: 'groomsmen', sub: 'Waistcoats', name: 'Groomsmen waistcoat · Silver', detail: 'Adjustable back · per person', price: 850, stock: 8, blocked: [] },
+  { id: 'gm3', category: 'groomsmen', sub: 'Accessories', name: 'Groomsmen tie set', detail: 'Matching set · per person', price: 350, stock: 10, blocked: [] },
+];
+
+function InventoryScreen({ mobile, draft, canViewMoney, onClose, onDone }) {
+  const [category, setCategory] = useState('suits');
+  const [sub, setSub] = useState('All');
+  const [error, setError] = useState('');
+  const [selected, setSelected] = useState(() => (draft.items || []).reduce((acc, item) => ({ ...acc, [item.id]: item }), {}));
+  const chosen = Object.values(selected);
+  const displayed = BOOKING_STOCK.filter((item) => item.category === category && (category !== 'groomsmen' || sub === 'All' || item.sub === sub));
+  const money = (rupees) => inr(R(rupees));
+  const available = (item, qty, itemStart = draft.start, itemEnd = draft.end) => {
+    const blocked = item.blocked.find((b) => itemStart <= b.end && itemEnd >= b.start);
+    return blocked ? { ok: false, reason: `${blocked.reason} on ${bookingDateLabel(blocked.start)}` } : { ok: qty <= item.stock, reason: qty > item.stock ? `Only ${item.stock} available` : '' };
+  };
+  const update = (item, patch) => setSelected((prev) => ({ ...prev, [item.id]: { ...(prev[item.id] || { ...item, qty: 0, sameAsMain: true, start: draft.start, end: draft.end }), ...patch } }));
+  const add = (item) => { const current = selected[item.id]; const qty = (current?.qty || 0) + 1; const result = available(item, qty, current?.sameAsMain === false ? current.start : draft.start, current?.sameAsMain === false ? current.end : draft.end); if (!result.ok) { setError(`${item.name}: ${result.reason}`); return; } setError(''); update(item, { qty }); };
+  const remove = (item) => { const current = selected[item.id]; if (!current) return; if (current.qty <= 1) setSelected(({ [item.id]: _, ...rest }) => rest); else update(item, { qty: current.qty - 1 }); };
+  return <div className={cx('inventory-screen', mobile && 'inventory-screen-mobile')} role="dialog" aria-modal="true" aria-label="Choose inventory"><div className="inventory-screen-shell">
+    <header className="inventory-screen-head"><button className="inventory-back" onClick={onClose}><Icon n="ArrowDownLeft" size={18} />Back to booking</button><div><b>Choose inventory</b><span>{bookingDateLabel(draft.start)} → {bookingDateLabel(draft.end)}{draft.dynamic ? ' · Item dates enabled' : ''}</span></div><button className="x" onClick={onClose} aria-label="Close inventory"><Icon n="X" size={20} /></button></header>
+    <div className="inventory-screen-hero"><div><span className="overline">Groom wear rental inventory</span><h1>Build the outfit around the event.</h1><p>Pick the pieces, check their date window, and return to the booking with a clean selection.</p></div><div className="inventory-hero-art" role="img" aria-label="Formal groom wear on a clothing rack" /></div>
+    <main className="inventory-screen-body"><section className="inventory-catalog"><div className="inventory-catalog-head"><div><h2>Available pieces</h2><p>Cleaning buffer is included before every event date.</p></div><div className="inventory-date-chip"><Icon n="CalendarDays" size={15} />{bookingDateLabel(draft.start)} → {bookingDateLabel(draft.end)}</div></div><div className="inventory-category-rail">{BOOKING_CATEGORIES.map((c) => <button key={c.id} aria-selected={category === c.id} onClick={() => { setCategory(c.id); setSub('All'); }}>{c.label}</button>)}</div>{category === 'groomsmen' && <div className="booking-subtabs">{['All', 'Suits', 'Waistcoats', 'Accessories'].map((s) => <button key={s} aria-pressed={sub === s} onClick={() => setSub(s)}>{s}</button>)}</div>}<div className="inventory-screen-grid">{displayed.map((item) => { const picked = selected[item.id]; const itemStart = picked?.sameAsMain === false ? picked.start : draft.start; const itemEnd = picked?.sameAsMain === false ? picked.end : draft.end; const result = available(item, (picked?.qty || 0) + 1, itemStart, itemEnd); return <article className={cx('inventory-screen-card', picked && 'selected')} key={item.id}><div className="inventory-card-visual" style={{ backgroundImage: `url(${BOOKING_IMAGES[item.category]})` }} /><div className="inventory-screen-card-body"><div><b>{item.name}</b><p>{item.detail}</p>{canViewMoney && <em>{money(item.price)} / rental</em>}</div><span className={result.ok ? 'stock-ok' : 'stock-bad'}>{result.ok ? `${item.stock} in rotation` : `Unavailable · ${result.reason}`}</span><div className="inventory-screen-card-action">{picked ? <Stepper value={picked.qty} max={item.stock} onChange={(v) => v ? update(item, { qty: v }) : remove(item)} /> : <button className="act solid dark" disabled={!result.ok} onClick={() => add(item)}><Icon n="Plus" size={16} />Add to booking</button>}</div>{picked && draft.dynamic && <div className="inventory-item-date"><label className="inline-check"><input type="checkbox" checked={picked.sameAsMain !== false} onChange={(e) => update(item, { sameAsMain: e.target.checked, start: draft.start, end: draft.end })} />Use event dates</label>{picked.sameAsMain === false && <div className="booking-grid two"><input className="inp" type="date" min={bookingDate()} value={picked.start} onChange={(e) => update(item, { start: e.target.value })} /><input className="inp" type="date" min={picked.start} value={picked.end} onChange={(e) => update(item, { end: e.target.value })} /></div>}</div>}</div></article>; })}</div>{error && <div className="note warn"><Icon n="TriangleAlert" size={16} />{error}</div>}</section><aside className="inventory-selection"><div className="inventory-selection-head"><div><h2>Selected for booking</h2><p>{chosen.reduce((s, i) => s + i.qty, 0)} pieces selected</p></div><span>{chosen.length}</span></div>{chosen.length ? <div className="inventory-selection-lines">{chosen.map((item) => <div key={item.id}><span><b>{item.name}</b><small>{item.qty} × {draft.dynamic && item.sameAsMain === false ? `${bookingDateLabel(item.start)} → ${bookingDateLabel(item.end)}` : 'Event dates'}</small></span><button onClick={() => remove(item)} aria-label={`Remove ${item.name}`}><Icon n="X" size={15} /></button></div>)}</div> : <div className="inventory-selection-empty"><Icon n="Shirt" size={30} /><b>No pieces selected</b><p>Start with the main outfit, then add accessories and groomsmen pieces.</p></div>}<button className="inventory-continue" disabled={!chosen.length} onClick={() => onDone(chosen)}>Continue with {chosen.reduce((s, i) => s + i.qty, 0) || 'selected'} pieces<Icon n="ArrowUpRight" size={18} /></button></aside></main>
+  </div></div>;
+}
+
+function NewSheet({ mobile, onClose, onGo, canViewMoney, initialStep = 1, initialDraft = {}, onOpenInventory, onBackToInventory }) {
+  const [step, setStep] = useState(initialStep);
+  const [start, setStart] = useState(initialDraft.start || bookingDate(14));
+  const [end, setEnd] = useState(initialDraft.end || bookingDate(15));
+  const [dynamic, setDynamic] = useState(!!initialDraft.dynamic);
+  const [category, setCategory] = useState('suits');
+  const [sub, setSub] = useState('All');
+  const [selected, setSelected] = useState(() => (initialDraft.items || []).reduce((acc, item) => ({ ...acc, [item.id]: item }), {}));
+  const [customer, setCustomer] = useState({ name: '', place: '', whatsapp: '' });
+  const [advance, setAdvance] = useState('');
+  const [error, setError] = useState('');
+
+  const chosen = Object.values(selected);
+  const money = (rupees) => inr(R(rupees));
+  const subtotal = chosen.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const gst = Math.round(subtotal * 0.18);
+  const total = subtotal + gst;
+  const displayed = BOOKING_STOCK.filter((item) => item.category === category && (category !== 'groomsmen' || sub === 'All' || item.sub === sub));
+  const available = (item, qty, itemStart = start, itemEnd = end) => {
+    const blocked = item.blocked.find((b) => itemStart <= b.end && itemEnd >= b.start);
+    return blocked ? { ok: false, reason: `${blocked.reason} for ${bookingDateLabel(blocked.start)}` } : { ok: qty <= item.stock, reason: qty > item.stock ? `Only ${item.stock} available` : '' };
+  };
+  const updateSelected = (item, patch) => setSelected((prev) => ({ ...prev, [item.id]: { ...(prev[item.id] || { ...item, qty: 0, sameAsMain: true, start, end }), ...patch } }));
+  const addItem = (item) => {
+    const current = selected[item.id];
+    const qty = (current?.qty || 0) + 1;
+    const result = available(item, qty, current?.sameAsMain === false ? current.start : start, current?.sameAsMain === false ? current.end : end);
+    if (!result.ok) { setError(`${item.name}: ${result.reason}`); return; }
+    setError(''); updateSelected(item, { qty });
+  };
+  const removeItem = (item) => {
+    const current = selected[item.id]; if (!current) return;
+    if (current.qty <= 1) setSelected(({ [item.id]: _, ...rest }) => rest); else updateSelected(item, { qty: current.qty - 1 });
+  };
+  const datesOkay = start && end && end >= start;
+  const next = () => {
+    setError('');
+    if (step === 1 && !datesOkay) { setError('Choose an end date on or after the start date.'); return; }
+    if (step === 1 && onOpenInventory) { onOpenInventory({ start, end, dynamic }); return; }
+    if (step === 2 && !chosen.length) { setError('Pick at least one item to continue.'); return; }
+    if (step === 3 && (!customer.name.trim() || !customer.whatsapp.trim())) { setError('Name and WhatsApp number are required.'); return; }
+    setStep((s) => Math.min(4, s + 1));
+  };
+  const back = () => {
+    setError('');
+    if (step === 3 && onBackToInventory) { onBackToInventory({ start, end, dynamic, items: chosen }); return; }
+    setStep((s) => Math.max(1, s - 1));
+  };
+  const finish = () => {
+    if (canViewMoney && (!advance || Number(advance) < 0 || Number(advance) > total)) { setError('Enter an advance between ₹0 and the total.'); return; }
+    onGo({ start, end, dynamic, items: chosen, customer, subtotal, gst, total, advance: canViewMoney ? Number(advance || 0) : null });
+  };
+  const stepTitle = ['Dates', 'Pick items', 'Customer', 'Review'][step - 1];
   return (
-    <Sheet mobile={mobile} onClose={onClose} title="New booking" sub="Who is it for?"
-      foot={<><button className="act dark" onClick={onClose}>Cancel</button><button className="act solid dark" disabled={!q.trim()} onClick={onGo}>Continue to dates</button></>}>
-      <input className="inp" autoFocus placeholder="Customer name or phone" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Customer name or phone" />
-      <div className="note"><Icon n="Info" size={16} />This is where the booking wizard starts. The full flow is its own screen.</div>
+    <Sheet mobile={mobile} wide onClose={onClose} title={`New booking · ${stepTitle}`} sub={`Step ${step} of 4 · ${dynamic ? 'Different dates allowed per item' : 'One event window for all items'}`}
+      foot={<><button className="act dark" onClick={step === 1 ? onClose : back}>{step === 1 ? 'Cancel' : 'Back'}</button><button className="act solid dark" disabled={step === 2 && !chosen.length} onClick={step === 4 ? finish : next}>{step === 4 ? 'Create booking' : 'Continue'}</button></>}>
+      <div className="booking-steps" aria-label="Booking progress">{['Dates', 'Items', 'Customer', 'Review'].map((label, i) => <span key={label} className={cx(i + 1 === step && 'on', i + 1 < step && 'done')}><b>{i + 1}</b><i>{label}</i></span>)}</div>
+      {step === 1 && <div className="booking-pane">
+        <div className="booking-grid two"><label><span>Event starts</span><input className="inp" type="date" min={bookingDate()} value={start} onChange={(e) => { setStart(e.target.value); if (end < e.target.value) setEnd(e.target.value); }} /></label><label><span>Event ends</span><input className="inp" type="date" min={start || bookingDate()} value={end} onChange={(e) => setEnd(e.target.value)} /></label></div>
+        <div className="date-summary"><Icon n="CalendarDays" size={20} /><div><b>{bookingDateLabel(start)} → {bookingDateLabel(end)}</b><small>{datesOkay ? 'This window reserves each selected piece with its prep buffer.' : 'Choose a valid date range.'}</small></div></div>
+        <label className="booking-check"><input type="checkbox" checked={dynamic} onChange={(e) => setDynamic(e.target.checked)} /><span><b>Different dates for individual items</b><small>Use this when the suit, groom’s outfit, or accessories are needed for different days.</small></span></label>
+        {!dynamic && <div className="note"><Icon n="Info" size={16} />All items will use the same event dates. You can turn on individual dates before selecting items.</div>}
+      </div>}
+      {step === 2 && <div className="booking-pane">
+        <div className="inventory-layout">
+          <div className="inventory-main">
+            <div className="inventory-context"><div><b>Choose what the groom and party need</b><small>Availability includes the one-day cleaning buffer before each event date.</small></div><span><Icon n="CalendarDays" size={15} />{bookingDateLabel(start)} → {bookingDateLabel(end)}</span></div>
+            <div className="booking-tabs" role="tablist">{BOOKING_CATEGORIES.map((c) => <button key={c.id} role="tab" aria-selected={category === c.id} onClick={() => { setCategory(c.id); setSub('All'); }}>{c.label}</button>)}</div>
+            {category === 'groomsmen' && <div className="booking-subtabs">{['All', 'Suits', 'Waistcoats', 'Accessories'].map((s) => <button key={s} aria-pressed={sub === s} onClick={() => setSub(s)}>{s}</button>)}</div>}
+            <div className="inventory-list">{displayed.map((item) => { const picked = selected[item.id]; const itemStart = picked?.sameAsMain === false ? picked.start : start; const itemEnd = picked?.sameAsMain === false ? picked.end : end; const result = available(item, (picked?.qty || 0) + 1, itemStart, itemEnd); return <article className={cx('inventory-card', picked && 'selected')} key={item.id}><div><b>{item.name}</b><small>{item.detail}</small>{canViewMoney && <em>{money(item.price)} / rental</em>}{result.ok ? <small className="stock-ok">{item.stock} pieces in rotation</small> : <small className="stock-bad">Unavailable · {result.reason}</small>}</div><div className="inventory-actions">{picked && <Stepper value={picked.qty} max={item.stock} onChange={(v) => v ? updateSelected(item, { qty: v }) : removeItem(item)} />}{!picked && <button className="act solid dark" disabled={!available(item, 1).ok} onClick={() => addItem(item)}><Icon n="Plus" size={16} />Pick</button>}</div>{picked && dynamic && <div className="item-dates"><label className="inline-check"><input type="checkbox" checked={picked.sameAsMain !== false} onChange={(e) => updateSelected(item, { sameAsMain: e.target.checked, start, end })} />Use event dates</label>{picked.sameAsMain === false && <div className="booking-grid two"><input className="inp" type="date" min={bookingDate()} value={picked.start} onChange={(e) => updateSelected(item, { start: e.target.value })} /><input className="inp" type="date" min={picked.start} value={picked.end} onChange={(e) => updateSelected(item, { end: e.target.value })} /></div>}</div>}</article>; })}</div>
+          </div>
+          <aside className="selection-tray"><div className="selection-tray-head"><div><b>Selected items</b><small>{chosen.reduce((s, i) => s + i.qty, 0)} pieces · ready to review</small></div><span>{chosen.length}</span></div>{chosen.length ? <div className="selection-lines">{chosen.map((i) => <div key={i.id}><span><b>{i.name}</b><small>{i.qty} × {dynamic && i.sameAsMain === false ? `${bookingDateLabel(i.start)} → ${bookingDateLabel(i.end)}` : 'Event dates'}</small></span><button onClick={() => removeItem(i)} aria-label={`Remove ${i.name}`}><Icon n="X" size={15} /></button></div>)}</div> : <div className="selection-empty"><Icon n="Shirt" size={24} /><p>Your picks will appear here.</p><small>Choose suits, sherwanis, accessories, or groomsmen pieces.</small></div>}{chosen.length > 0 && <div className="selection-total"><span>Items selected</span><b>{chosen.reduce((s, i) => s + i.qty, 0)}</b></div>}</aside>
+        </div>
+      </div>}
+      {step === 3 && <div className="booking-pane"><div className="customer-intro"><Icon n="UsersRound" size={22} /><div><b>Who is this booking for?</b><small>Use the number staff will message on WhatsApp.</small></div></div><label><span>Customer name</span><input className="inp" autoFocus value={customer.name} onChange={(e) => setCustomer({ ...customer, name: e.target.value })} placeholder="e.g. Faisal Rahman" /></label><label><span>WhatsApp number</span><input className="inp" inputMode="tel" value={customer.whatsapp} onChange={(e) => setCustomer({ ...customer, whatsapp: e.target.value })} placeholder="e.g. 98470 90311" /></label><label><span>Place</span><input className="inp" value={customer.place} onChange={(e) => setCustomer({ ...customer, place: e.target.value })} placeholder="e.g. Kozhikode" /></label></div>}
+      {step === 4 && <div className="booking-pane"><div className="review-head"><div><b>{customer.name}</b><small>{customer.place || 'Place not added'} · {customer.whatsapp}</small></div><span>{bookingDateLabel(start)} → {bookingDateLabel(end)}</span></div><div className="review-lines">{chosen.map((item) => <div key={item.id}><span>{item.name} ×{item.qty}<small>{dynamic && item.sameAsMain === false ? `${bookingDateLabel(item.start)} → ${bookingDateLabel(item.end)}` : 'Event dates'}</small></span>{canViewMoney && <b>{money(item.price * item.qty)}</b>}</div>)}</div>{canViewMoney ? <div className="bill"><SumRow label="Rental subtotal" value={money(subtotal)} /><SumRow label="GST · 18%" value={money(gst)} /><SumRow total label="Total" value={money(total)} /><label><span>Advance customer is paying now</span><input className="inp" type="number" min="0" max={total} inputMode="numeric" placeholder="Enter agreed amount" value={advance} onChange={(e) => setAdvance(e.target.value)} /></label>{advance && <div className="balance-line">Balance after advance <b>{money(Math.max(0, total - Number(advance || 0)))}</b></div>}</div> : <div className="note"><Icon n="Lock" size={16} />Pricing and payment are hidden for Staff. A manager can complete the bill from the booking record.</div>}</div>}
+      {error && <div className="note warn"><Icon n="TriangleAlert" size={16} />{error}</div>}
     </Sheet>
   );
 }
@@ -1386,7 +1761,7 @@ export default function WedHubHome({ config }) {
     if (document.getElementById('wh-fonts')) return;
     const l = document.createElement('link');
     l.id = 'wh-fonts'; l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..800&family=Playfair+Display:wght@700&display=swap';
+    l.href = 'https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap';
     document.head.appendChild(l);
   }, []);
 
@@ -1410,16 +1785,8 @@ export default function WedHubHome({ config }) {
   };
   const retry = () => { setLoading(true); setTimeout(() => { setLoading(false); setErrored(false); setData(seed('busy')); }, 900); };
 
-  /* a small, tasteful burst when a booking is fully wrapped up — skipped under reduced motion */
-  const celebrate = () => {
-    if (reducedMotion) return;
-    confetti({
-      particleCount: 46, spread: 62, startVelocity: 32, gravity: 1.1, ticks: 160,
-      origin: { x: 0.5, y: 0.78 },
-      colors: theme === 'dark' ? ['#5B8DEF', '#4FD1C5', '#3CCB7F'] : ['#2563EB', '#0F766E', '#027A48'],
-      disableForReducedMotion: true,
-    });
-  };
+  /* Completion feedback stays quiet and reversible for a frequently used console. */
+  const celebrate = () => { if (!reducedMotion) info('Booking complete.'); };
 
   /* derived */
   const dayEvs = [
@@ -1473,7 +1840,7 @@ export default function WedHubHome({ config }) {
     if (mobile) { setTab('laundry'); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     else if (laundryRef.current) laundryRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
-  const scrollBand = () => bandRef.current && bandRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const scrollBand = () => bandRef.current && bandRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
   const toggleOdCollapsed = () => setOdCollapsed((v) => {
     const nv = !v;
     try { sessionStorage.setItem('wh-od-collapsed', nv ? '1' : '0'); } catch { /* no-op */ }
@@ -1633,7 +2000,7 @@ export default function WedHubHome({ config }) {
                   </button>
                 )}
                 <button className={cx('od-btn solid', offline && 'locked')} onClick={() => (offline ? blocked() : setSheet({ kind: 'return', src: 'overdue', id: o.id }))}>
-                  <Icon n={offline ? 'Lock' : 'ArrowDownLeft'} size={17} sw={2.4} />Take back
+                  <Icon n={offline ? 'Lock' : 'ArrowDownLeft'} size={17} sw={2.4} /><span className="lbl">Take back</span>
                 </button>
               </div>
             </div>
@@ -1809,7 +2176,7 @@ export default function WedHubHome({ config }) {
               <h3>Returned, not in a wash yet</h3>
               {pool.length ? (
                 <>
-                  <ul className="plain">{pool.map((p) => <li key={p.id}><b>{p.name} ×{p.qty}</b><span>{p.flag && '⚑ '}{p.from} · {p.at}</span></li>)}</ul>
+                  <ul className="plain">{pool.map((p) => <li key={p.id}><b>{p.name} ×{p.qty}</b><span>{p.flag && 'Flagged · '}{p.from} · {p.at}</span></li>)}</ul>
                   <button className={cx('act wash', offline && 'locked')} onClick={() => (offline ? blocked() : setSheet({ kind: 'sendWash' }))}>
                     <Icon n={offline ? 'Lock' : 'Droplet'} size={17} />Send to wash
                   </button>
@@ -1867,11 +2234,9 @@ export default function WedHubHome({ config }) {
   );
 
   const toastEl = () => (
-    <AnimatePresence>
+    <>
       {toast && (
-        <motion.div key={`${toast.tone}-${toast.msg || 'offline'}`} className={cx('toast', toast.tone === 'offline' && 'offline')} role="status"
-          initial={{ opacity: 0, y: 18, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.96 }}
-          transition={{ type: 'spring', stiffness: 420, damping: 32 }}>
+        <div key={`${toast.tone}-${toast.msg || 'offline'}`} className={cx('toast', toast.tone === 'offline' && 'offline', 'toast-enter')} role="status">
           {toast.tone === 'offline' ? (
             <>
               <Icon n="WifiOff" size={22} />
@@ -1883,9 +2248,9 @@ export default function WedHubHome({ config }) {
               {toast.undo && <button onClick={() => { toast.undo(); notify({ tone: 'info', msg: 'Undone.' }); }}>Undo</button>}
             </>
           )}
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </>
   );
 
   const renderSheet = () => {
@@ -1902,7 +2267,7 @@ export default function WedHubHome({ config }) {
     if (k === 'sendWash') {
       return <CheckSheet mobile={mobile} onClose={close} title="Send to wash" verb="Send"
         sub="Pick what goes in this wash. It becomes one batch — not tracked per garment."
-        items={data.pool.map((p) => ({ id: p.id, name: p.name, qty: p.qty, sub: `${p.flag ? '⚑ flagged · ' : ''}from ${p.from}, ${p.at}` }))}
+        items={data.pool.map((p) => ({ id: p.id, name: p.name, qty: p.qty, sub: `${p.flag ? 'Flagged · ' : ''}from ${p.from}, ${p.at}` }))}
         note="Due back in about a day. Items stay off the rack until you mark the batch washed."
         onConfirm={(ids) => { if (confirmSendWash(ids)) close(); }} />;
     }
@@ -1924,7 +2289,20 @@ export default function WedHubHome({ config }) {
         onConfirm={(to) => { if (doMove(ev, to)) close(); }} />;
     }
     if (k === 'search') return <SearchSheet mobile={mobile} data={data} onClose={close} onPick={(b) => { close(); info(`#${b.bid} ${b.name} opens on the Booking Detail screen.`); }} />;
-    if (k === 'new') return <NewSheet mobile={mobile} onClose={close} onGo={() => { close(); info('Next: booking wizard, step 2 — dates, checked against stock with the 1-day prep buffer.'); }} />;
+    if (k === 'inventory') return <InventoryScreen mobile={mobile} draft={sheet.draft} canViewMoney onClose={() => setSheet({ kind: 'new', initialStep: 1, draft: sheet.draft })} onDone={(items) => setSheet({ kind: 'new', initialStep: 3, draft: { ...sheet.draft, items } })} />;
+    if (k === 'new') return <NewSheet mobile={mobile} canViewMoney initialStep={sheet.initialStep || 1} initialDraft={sheet.draft || {}} onClose={close} onOpenInventory={(draft) => setSheet({ kind: 'inventory', draft })} onBackToInventory={(draft) => setSheet({ kind: 'inventory', draft })} onGo={(booking) => {
+      const bid = Math.max(1065, ...data.events.map((e) => Number(e.bid) || 0)) + 1;
+      const ok = run((d) => ({
+        ...d,
+        events: [...d.events, {
+          id: uid(), day: 0, type: 'pickup', time: 600, name: booking.customer.name, phone: booking.customer.whatsapp, bid,
+          party: booking.items.some((i) => i.category === 'groomsmen') ? 'Groom + groomsmen' : undefined,
+          lines: booking.items.map((i) => ({ id: i.id, name: i.name, qty: i.qty })), status: 'pending',
+          rentalTotal: R(booking.total), advancePaid: R(booking.advance || 0), balanceDue: R(Math.max(0, booking.total - (booking.advance || 0))),
+        }],
+      }), `Booking #${bid} created`);
+      if (ok) close();
+    }} />;
     return null;
   };
 
@@ -1932,13 +2310,24 @@ export default function WedHubHome({ config }) {
 
   const themeToggle = (size = 20) => (
     <button className="iconbtn theme-toggle" onClick={toggleTheme} aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-      <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={theme} initial={{ opacity: 0, rotate: -90, scale: 0.6 }} animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          exit={{ opacity: 0, rotate: 90, scale: 0.6 }} transition={{ duration: 0.22 }} style={{ display: 'grid', placeItems: 'center' }}>
+      <span key={theme} style={{ display: 'grid', placeItems: 'center' }}>
           <Icon n={theme === 'dark' ? 'Sun' : 'Moon'} size={size} />
-        </motion.span>
-      </AnimatePresence>
+      </span>
+      <span className="top-action-label">{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
     </button>
+  );
+
+  const renderQuickBooking = () => (
+    <section className="quick-booking" aria-label="New booking">
+      <div className="quick-booking-icon"><Icon n="Plus" size={18} sw={2.6} /></div>
+      <div className="quick-booking-copy">
+        <h2>New booking</h2>
+        <p>Check dates and stock in one step.</p>
+      </div>
+      <button className={cx('quick-booking-action', offline && 'locked')} onClick={openNew}>
+        <Icon n={offline ? 'Lock' : 'ArrowUpRight'} size={17} sw={2.4} />Open
+      </button>
+    </section>
   );
 
   /* ───── mobile composition ───── */
@@ -1968,21 +2357,19 @@ export default function WedHubHome({ config }) {
               <Icon n="Droplet" size={16} />Laundry{laundryCount > 0 && <span className="cnt">{laundryCount}</span>}
             </button>
           </div>
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.div key={`${tab}-${dayOff}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }}>
+          <div key={`${tab}-${dayOff}`} className="view-enter">
               {tab === 'schedule' ? renderSchedule() : <div className="side">{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</div>}
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </main>
         <nav className="bar" aria-label="Main">
           <button className="on"><Icon n="House" size={22} />Home</button>
           <button onClick={() => nav('Bookings')}><Icon n="CalendarDays" size={22} />Bookings</button>
-          <motion.button className={cx('plus', offline && 'locked')} onClick={openNew} aria-label="New booking" whileTap={{ scale: 0.92 }}><Icon n={offline ? 'Lock' : 'Plus'} size={26} sw={2.6} /></motion.button>
+          <button className={cx('plus', offline && 'locked')} onClick={openNew} aria-label="New booking"><Icon n={offline ? 'Lock' : 'Plus'} size={26} sw={2.6} /></button>
           <button onClick={() => nav('Inventory')}><Icon n="Shirt" size={22} />Inventory</button>
           <button onClick={() => nav('More')}><Icon n="Menu" size={22} />More</button>
         </nav>
         {toastEl()}
-        <AnimatePresence>{renderSheet()}</AnimatePresence>
+        {renderSheet()}
       </div>
     );
   }
@@ -1999,31 +2386,28 @@ export default function WedHubHome({ config }) {
     <div className="wh" data-theme={theme}>
       <style>{CSS}</style>
       <header className="top">
-        <div className="brand"><span className="mark">W</span><span className="brand-lockup"><span className="brand-name">WedHub</span><span className="brand-context">Operations</span></span></div>
+        <div className="brand"><span className="mark">W</span><span className="brand-lockup"><span className="brand-name">WedHub</span><span className="brand-context">Operations</span><span className="brand-date">{shortDay(dayOff)}</span></span></div>
         <nav className="nav" aria-label="Main">
           {navItems.map(([label, on, icon]) => <button key={label} className={on ? 'on' : undefined} onClick={() => !on && nav(label)}><Icon n={icon} size={16} sw={2.2} /><span>{label}</span></button>)}
         </nav>
         <span className="sp" />
         {alertChip()}{offlineChip()}
         {themeToggle(20)}
-        <button className="iconbtn" onClick={() => setSheet({ kind: 'search' })} aria-label="Find a booking (press /)"><Icon n="Search" size={20} /></button>
-        <motion.button className={cx('btn-new', offline && 'locked')} onClick={openNew} whileTap={{ scale: 0.97 }}>
+        <button className="iconbtn top-tool" onClick={() => setSheet({ kind: 'search' })} aria-label="Find a booking (press /)"><Icon n="Search" size={20} /><span className="top-action-label">Search</span></button>
+        <button className={cx('btn-new', offline && 'locked')} onClick={openNew}>
           <Icon n={offline ? 'Lock' : 'Plus'} size={20} sw={2.6} />New booking<kbd>N</kbd>
-        </motion.button>
+        </button>
         <span className="avatar" title={`${me.name} · ${me.title}`}>{me.ini}</span>
       </header>
       {banner()}
-      {renderOverdue()}
       <main className="page">
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div className="main-col" key={dayOff} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
-            {renderDayHead()}{renderSchedule()}
-          </motion.div>
-        </AnimatePresence>
-        <aside className="side">{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</aside>
+        <div className="main-col view-enter" key={dayOff}>
+            {renderDayHead()}{renderOverdue()}{renderSchedule()}
+        </div>
+        <aside className="side">{renderQuickBooking()}{renderLaundry()}{role !== 'staff' && !failed && renderDesk()}</aside>
       </main>
       {toastEl()}
-      <AnimatePresence>{renderSheet()}</AnimatePresence>
+      {renderSheet()}
     </div>
   );
 }
